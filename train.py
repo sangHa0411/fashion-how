@@ -1,12 +1,20 @@
 
 import os
 import torch
+import random
 import argparse
+import numpy as np
+
+from torch.utils.data import DataLoader
+
+from dataset.dataset import FashionHowDataset
+from dataset.collator import PaddingCollator
 
 from utils.encoder import Encoder
 from utils.augmentation import DataAugmentation
 from utils.preprocessor import DiagPreprocessor
 from utils.loader import MetaLoader, DialogueLoader
+
 from models.tokenizer import SubWordEmbReaderUtil
 
 def train(args) :
@@ -26,7 +34,7 @@ def train(args) :
     # -- Dialogue Data
     print("\nLoading Dialogue Data...")
     train_diag_loader = DialogueLoader(args.in_file_trn_dialog)
-    train_raw_dataset = train_diag_loader.get_dataset()
+    train_raw_dataset = train_diag_loader.get_train_dataset()
 
     # -- Dialogue Preprocessor
     print("\nPreprocessing Dialogue Data...")
@@ -43,17 +51,27 @@ def train(args) :
     # -- Encoding Data                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
     print("\nEncoding Data...")
     encoder = Encoder(swer, img2id, num_cordi=4, mem_size=args.mem_size)
-    train_dataset = encoder(train_dataset)
-    breakpoint()
-    pass
+    train_encoded_dataset = encoder(train_dataset)
 
-def seed_everything(seed) :
+    # -- Data Collator & Loader
+    data_collator = PaddingCollator()
+    train_torch_dataset = FashionHowDataset(dataset=train_encoded_dataset)
+    train_dataloader = DataLoader(train_torch_dataset, 
+        batch_size=args.batch_size, 
+        shuffle=True,
+        num_workers=args.num_workers,
+        collate_fn=data_collator
+    )
+    breakpoint()
+
+def seed_everything(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.enabled = False
-    return seed
+    np.random.seed(seed)
+    random.seed(seed)
 
 if __name__ == '__main__':
 
@@ -118,6 +136,10 @@ if __name__ == '__main__':
     parser.add_argument('--augmentation_size', type=int,
         default=5,
         help='# of data augmentation'
+    )
+    parser.add_argument('--num_workers', type=int,
+        default=4,
+        help='the number of workers for data loader'
     )
     parser.add_argument('--use_cl', type=bool,
         default=True,

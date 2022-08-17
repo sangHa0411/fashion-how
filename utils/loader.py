@@ -105,7 +105,10 @@ class DialogueLoader :
     def __init__(self, path,) :
         self.path = path
 
-    def get_dataset(self, ) :
+    def get_eval_dataset(self, ) :
+        pass
+
+    def get_train_dataset(self, ) :
         df = self._load()
         stories = self._split(df)
 
