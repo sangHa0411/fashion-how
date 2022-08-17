@@ -95,7 +95,6 @@ class MemN2N(nn.Module):
 		req = torch.matmul(u[-1], self._W)    
 		return req
 			
-
 class RequirementNet(nn.Module):
 	"""Requirement Network"""
 	def __init__(self, 

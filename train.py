@@ -2,6 +2,8 @@
 import os
 import torch
 import argparse
+
+from utils.encoder import Encoder
 from utils.augmentation import DataAugmentation
 from utils.preprocessor import DiagPreprocessor
 from utils.loader import MetaLoader, DialogueLoader
@@ -37,9 +39,12 @@ def train(args) :
     data_augmentation = DataAugmentation(num_aug=args.augmentation_size)
     train_dataset = data_augmentation(train_dataset, img2id, id2img, img_similarity)
     print("The number of train dataset : %d" %len(train_dataset))
-    breakpoint()
 
-    # -- Dialogue Data
+    # -- Encoding Data                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+    print("\nEncoding Data...")
+    encoder = Encoder(swer, img2id, num_cordi=4, mem_size=args.mem_size)
+    train_dataset = encoder(train_dataset)
+    breakpoint()
     pass
 
 def seed_everything(seed) :

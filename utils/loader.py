@@ -87,15 +87,15 @@ class MetaLoader :
                 img2id[i][k] = j
                 id2img[i][j] = k
 
-        img2id[0][len(img2id[0])] = "NONE-OUTER"
-        img2id[1][len(img2id[1])] = "NONE-TOP"
-        img2id[2][len(img2id[2])] = "NONE-BOTTOM"
-        img2id[3][len(img2id[3])] = "NONE-SHOES"
+        img2id[0]["NONE-OUTER"] = len(img2id[0])
+        img2id[1]["NONE-TOP"] = len(img2id[1])
+        img2id[2]["NONE-BOTTOM"] = len(img2id[2])
+        img2id[3]["NONE-SHOES"] = len(img2id[3])
 
-        id2img[0]["NONE-OUTER"] = len(id2img[0])
-        id2img[1]["NONE-TOP"] = len(id2img[1])
-        id2img[2]["NONE-BOTTOM"] = len(id2img[2])
-        id2img[3]["NONE-SHOES"] = len(id2img[3])
+        id2img[0][len(id2img[0])] = "NONE-OUTER"
+        id2img[1][len(id2img[1])] = "NONE-TOP"
+        id2img[2][len(id2img[2])] = "NONE-BOTTOM"
+        id2img[3][len(id2img[3])] = "NONE-SHOES"
 
         return img2id, id2img, img_similarity
 
