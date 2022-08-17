@@ -101,7 +101,6 @@ class RequirementNet(nn.Module):
 		emb_size, 
 		key_size, 
 		mem_size, 
-		meta_size, 
 		hops, 
 		name='RequirementNet'
 		):
@@ -113,7 +112,6 @@ class RequirementNet(nn.Module):
 		self._memn2n = MemN2N(emb_size, 
 			key_size, 
 			mem_size, 
-			meta_size, 
 			hops
 		)
 

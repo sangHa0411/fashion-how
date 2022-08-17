@@ -15,6 +15,7 @@ from utils.augmentation import DataAugmentation
 from utils.preprocessor import DiagPreprocessor
 from utils.loader import MetaLoader, DialogueLoader
 
+from models.model import Model
 from models.tokenizer import SubWordEmbReaderUtil
 
 def train(args) :
@@ -62,7 +63,22 @@ def train(args) :
         num_workers=args.num_workers,
         collate_fn=data_collator
     )
-    breakpoint()
+
+    # -- Model
+    num_rnk = 3
+    coordi_size = 4
+    item_sizes = [len(img2id[i]) for i in range(4)]
+    model = Model(emb_size=swer.get_emb_size(),
+        key_size=args.key_size,
+        mem_size=args.mem_size,
+        hops=args.hops,
+        item_sizes=item_sizes,
+        coordi_size=coordi_size,
+        eval_node=args.eval_node,
+        num_rnk=num_rnk,
+        dropout_prob=args.dropout_prob,
+        img_feat_size=args.img_feat_size
+    )
 
 def seed_everything(seed):
     torch.manual_seed(seed)
@@ -114,7 +130,7 @@ if __name__ == '__main__':
         help='dropout prob.'
     )
     parser.add_argument('--batch_size', type=int,
-        default=32,
+        default=2,
         help='batch size for training'
     )
     parser.add_argument('--epochs', type=int,
@@ -132,6 +148,14 @@ if __name__ == '__main__':
     parser.add_argument('--key_size', type=int,
         default=300,
         help='memory size for the MemN2N'
+    )
+    parser.add_argument('--img_feature_size', type=int,
+        default=512,
+        help='size of image feature'
+    )
+    parser.add_argument('--eval_node', type=str,
+        default='[6000,6000,6000,200][2000,2000]',
+        help='nodes of evaluation network'
     )
     parser.add_argument('--augmentation_size', type=int,
         default=5,
