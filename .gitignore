@@ -1,5 +1,7 @@
 data
+wandb
 wandb.env
 gAIa_CL_model
+running.sh
 *.ipynb
 __pycache__

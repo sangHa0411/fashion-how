@@ -122,7 +122,9 @@ def train(args) :
 
     # -- Training
     acc = 0.0
-    total_steps = len(train_dataloader) * args.num_epochs
+    model.to(device)
+    train_data_iterator = iter(train_dataloader)
+    total_steps = len(train_dataloader) * args.epochs
     for step in tqdm(range(total_steps)) :
         try :
             data = next(train_data_iterator)
@@ -228,11 +230,11 @@ if __name__ == '__main__':
         help='dropout prob.'
     )
     parser.add_argument('--batch_size', type=int,
-        default=2,
+        default=8,
         help='batch size for training'
     )
     parser.add_argument('--eval_batch_size', type=int,
-        default=4,
+        default=16,
         help='batch size for training'
     )
     parser.add_argument('--epochs', type=int,
@@ -251,7 +253,7 @@ if __name__ == '__main__':
         default=300,
         help='memory size for the MemN2N'
     )
-    parser.add_argument('--img_feature_size', type=int,
+    parser.add_argument('--img_feat_size', type=int,
         default=512,
         help='size of image feature'
     )
