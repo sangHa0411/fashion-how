@@ -140,6 +140,7 @@ def train(args) :
 
         loss = loss_ce(logits, rank)
         loss.backward()
+        optimizer.step()
 
         preds = torch.argmax(logits, 1)
         acc += torch.sum(rank == preds).item()
@@ -173,6 +174,9 @@ def train(args) :
             wandb.log({"eval/tau" : eval_tau})
             print("Evaluation Tau : %.4f" %eval_tau)
             model.train()
+
+            path = os.path.join(args.model_path, f"checkpoint-{step}.pt")
+            torch.save(model.state_dict(), path)
 
 def seed_everything(seed):
     torch.manual_seed(seed)
