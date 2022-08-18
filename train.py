@@ -1,5 +1,6 @@
 
 import os
+import math
 import torch
 import random
 import argparse
@@ -88,11 +89,14 @@ def train(args) :
     
     if args.model_file is not None:
         model_path = os.path.join(args.model_path, args.model_file)
+        print("\nLoading model from %s" %model_path)
         model.load_state_dict(torch.load(model_path))
-        print("\nLoaded model from %s" %model_path)
-
+        for n, p in model.named_parameters():
+            n = n.replace('.', '__')
+            model.register_buffer('{}_mean'.format(n), p.data.clone(), persistent=False)
+    
     # -- Optimizer, Scheduler, Loss Function
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1e-3)
     loss_ce = torch.nn.CrossEntropyLoss().to(device)
 
     # -- Training
@@ -116,7 +120,7 @@ def train(args) :
         logits = model(dlg=diag, crd=cordi)
 
         loss = loss_ce(logits, rank)
-        ewc = ewc_loss(4000, model, cuda=cuda_flag)
+        ewc = ewc_loss(args.lamda, model, cuda=cuda_flag)
         loss = loss + ewc
         loss.backward()
         optimizer.step()
@@ -124,7 +128,7 @@ def train(args) :
         preds = torch.argmax(logits, 1)
         acc += torch.sum(rank == preds).item() 
 
-        if step > 0 and step % args.logging_steps == 0 :
+        if step % args.logging_steps == 0 :
             acc = acc / (args.batch_size * args.logging_steps)
             info = {"train/loss": loss.item(), "train/acc": acc}
             print(info)
@@ -199,6 +203,10 @@ if __name__ == '__main__':
     parser.add_argument('--key_size', type=int,
         default=300,
         help='memory size for the MemN2N'
+    )
+    parser.add_argument('--lamda', type=int,
+        default=4000,
+        help='lamda of ewc'
     )
     parser.add_argument('--img_feat_size', type=int,
         default=512,
