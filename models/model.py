@@ -44,5 +44,4 @@ class Model(nn.Module):
         # crd : (batch_size, num_rnk, coordi_size)
         req = self._requirement(dlg) # (batch_size, key_size)
         logits = self._policy(req, crd)
-        preds = torch.argmax(logits, 1)
-        return logits, preds
+        return logits

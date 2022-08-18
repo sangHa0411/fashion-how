@@ -3,8 +3,11 @@ import os
 import torch
 import random
 import argparse
+import wandb
 import numpy as np
-
+from tqdm import tqdm
+from scipy import stats
+from dotenv import load_dotenv
 from torch.utils.data import DataLoader
 
 from dataset.dataset import FashionHowDataset
@@ -13,7 +16,7 @@ from dataset.collator import PaddingCollator
 from utils.encoder import Encoder
 from utils.augmentation import DataAugmentation
 from utils.preprocessor import DiagPreprocessor
-from utils.loader import MetaLoader, DialogueLoader
+from utils.loader import MetaLoader, DialogueTrainLoader, DialogueTestLoader
 
 from models.model import Model
 from models.tokenizer import SubWordEmbReaderUtil
@@ -22,6 +25,10 @@ def train(args) :
 
     # -- Seed
     seed_everything(args.seed)
+
+    # -- Device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("\nDevice:", device)
 
     # -- Subword Embedding
     print('\nInitializing subword embedding')
@@ -34,8 +41,12 @@ def train(args) :
 
     # -- Dialogue Data
     print("\nLoading Dialogue Data...")
-    train_diag_loader = DialogueLoader(args.in_file_trn_dialog)
-    train_raw_dataset = train_diag_loader.get_train_dataset()
+    train_diag_loader = DialogueTrainLoader(args.in_file_trn_dialog)
+    train_raw_dataset = train_diag_loader.get_dataset()
+
+    eval_diag_loader = DialogueTestLoader(args.in_file_tst_dialog, eval_flag=True)
+    eval_dataset = eval_diag_loader.get_dataset()
+    eval_rewards = [eval_data.pop("reward")for eval_data in eval_dataset]
 
     # -- Dialogue Preprocessor
     print("\nPreprocessing Dialogue Data...")
@@ -53,6 +64,7 @@ def train(args) :
     print("\nEncoding Data...")
     encoder = Encoder(swer, img2id, num_cordi=4, mem_size=args.mem_size)
     train_encoded_dataset = encoder(train_dataset)
+    eval_encoded_dataset = encoder(eval_dataset)
 
     # -- Data Collator & Loader
     data_collator = PaddingCollator()
@@ -60,6 +72,14 @@ def train(args) :
     train_dataloader = DataLoader(train_torch_dataset, 
         batch_size=args.batch_size, 
         shuffle=True,
+        num_workers=args.num_workers,
+        collate_fn=data_collator
+    )
+
+    eval_torch_dataset = FashionHowDataset(dataset=eval_encoded_dataset)
+    eval_dataloader = DataLoader(eval_torch_dataset, 
+        batch_size=args.eval_batch_size, 
+        shuffle=False,
         num_workers=args.num_workers,
         collate_fn=data_collator
     )
@@ -79,6 +99,80 @@ def train(args) :
         dropout_prob=args.dropout_prob,
         img_feat_size=args.img_feat_size
     )
+
+    # -- Optimizer, Scheduler, Loss Function
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
+    loss_ce = torch.nn.CrossEntropyLoss().to(device)
+
+    # -- Wandb
+    load_dotenv(dotenv_path="wandb.env")
+    WANDB_AUTH_KEY = os.getenv("WANDB_AUTH_KEY")
+    wandb.login(key=WANDB_AUTH_KEY)
+
+    name = f"EP:{args.epochs}_BS:{args.batch_size}_LR:{args.learning_rate}"
+    wandb.init(
+        entity="sangha0411",
+        project="fashion-how",
+        group="baseline",
+        name=name
+    )
+
+    training_args = {"epochs": args.epochs, "batch_size": args.batch_size, "learning_rate": args.learning_rate}
+    wandb.config.update(training_args)
+
+    # -- Training
+    acc = 0.0
+    total_steps = len(train_dataloader) * args.num_epochs
+    for step in tqdm(range(total_steps)) :
+        try :
+            data = next(train_data_iterator)
+        except StopIteration :
+            train_data_iterator = iter(train_dataloader)
+            data = next(train_data_iterator)
+
+        optimizer.zero_grad()
+
+        diag, cordi, rank = data["diag"], data["cordi"], data["rank"]
+        diag = diag.float().to(device)
+        cordi = cordi.long().to(device)
+        rank = rank.long().to(device)
+        logits = model(dlg=diag, crd=cordi)
+
+        loss = loss_ce(logits, rank)
+        loss.backward()
+
+        preds = torch.argmax(logits, 1)
+        acc += torch.sum(rank == preds).item()
+
+        if step > 0 and step % args.logging_steps == 0 :
+            info = {"loss": loss.item(), "acc": acc / args.logging_steps}
+            print(info)
+            wandb.log(info)
+            acc = 0.0
+
+        if step > 0 and step % args.eval_steps == 0 :
+            eval_predictions = []
+            with torch.no_grad() :
+                model.eval()
+                for eval_data in eval_dataloader :
+                    diag, cordi = eval_data["diag"], eval_data["cordi"]
+                    diag = diag.float().to(device)
+                    cordi = cordi.long().to(device)
+                    rank = rank.long().to(device)
+                    logits = model(dlg=diag, crd=cordi)
+
+                    preds = torch.argsort(logits, -1).detach().cpu().numpy()
+                    eval_predictions.extend([pred.tolist() for pred in preds])
+            
+            eval_tau = 0.0
+            for i in range(len(eval_rewards)) :
+                tau, _ = stats.weightedtau(eval_predictions[i], eval_rewards[i])
+                eval_tau += tau
+
+            eval_tau /= len(eval_rewards)
+            wandb.log({"eval/tau" : eval_tau})
+            print("Evaluation Tau : %.4f" %eval_tau)
+            model.train()
 
 def seed_everything(seed):
     torch.manual_seed(seed)
@@ -133,6 +227,10 @@ if __name__ == '__main__':
         default=2,
         help='batch size for training'
     )
+    parser.add_argument('--eval_batch_size', type=int,
+        default=4,
+        help='batch size for training'
+    )
     parser.add_argument('--epochs', type=int,
         default=10,
         help='epochs to training'
@@ -164,6 +262,14 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', type=int,
         default=4,
         help='the number of workers for data loader'
+    )
+    parser.add_argument('--logging_steps', type=int,
+        default=100,
+        help='logging steps'
+    )
+    parser.add_argument('--eval_steps', type=int,
+        default=500,
+        help='eval steps'
     )
     parser.add_argument('--use_cl', type=bool,
         default=True,

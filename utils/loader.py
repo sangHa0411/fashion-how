@@ -1,4 +1,5 @@
 import copy
+import random
 import collections
 import pandas as pd 
 import numpy as np
@@ -100,15 +101,12 @@ class MetaLoader :
         return img2id, id2img, img_similarity
 
 
-class DialogueLoader :
+class DialogueTrainLoader :
 
     def __init__(self, path,) :
         self.path = path
 
-    def get_eval_dataset(self, ) :
-        pass
-
-    def get_train_dataset(self, ) :
+    def get_dataset(self, ) :
         df = self._load()
         stories = self._split(df)
 
@@ -209,3 +207,93 @@ class DialogueLoader :
             i += 1
 
         return descriptions, coordi, reward
+
+class DialogueTestLoader :
+
+    def __init__(self, path, eval_flag) :
+        self.path = path
+        self.eval_flag = eval_flag
+
+    def get_dataset(self, ) :
+        ddata = self._load()
+        stories = self._split(ddata)
+
+        dataset = []
+        for i in range(len(stories)):
+            story = stories[i]
+            if self.eval_flag :
+                d, c, r = self._extract(story)
+                data = {"diag" : d, "cordi" : c, "reward" : r}
+            else :
+                d, c = self._extract(story)
+                data = {"diag" : d, "cordi" : c}
+            dataset.append(data)
+        return dataset
+
+    def _load(self, ) :
+        with open(self.path, encoding="euc-kr", mode="r") as f :
+            ddata = f.readlines()
+        return ddata
+
+    def _split(self, dataset) :
+        start_ids = []
+        for i, r in enumerate(dataset) :
+            if ";" in r :
+                start_ids.append(i)
+
+        stories = []
+        for i in range(len(start_ids) - 1) :
+            prev = start_ids[i]
+            cur = start_ids[i+1]
+            story = dataset[prev:cur]
+            stories.append(story)
+        return stories
+
+    def _extract(self, story) :
+        num = int(story[0][2:-1])
+        desc = [row.split("\t")[1].strip() 
+            for row in story[1:-3]
+        ]
+        cordi = [row.split("\t")[1].strip().split(" ") 
+            for row in story[-3:]
+        ]
+        cordi = self._preprocess(cordi)
+
+        if self.eval_flag :
+            cordi, ranks = self._shuffle(cordi)
+            return desc, cordi, ranks
+        else :
+            return desc, cordi
+
+    def _preprocess(self, cordi) :
+        cordi = [
+            [item if len(item) == 6 else item[2:] for item in c]
+            for c in cordi
+        ]
+        cordi = [
+            {position_of_fashion_item(item) : item for item in c} 
+            for c in cordi
+        ]
+        cordi = [self._add_dummy(c) for c in cordi]
+        return cordi
+
+    def _shuffle(self, cordi) :
+        ranks = [0, 1, 2]
+        random.shuffle(ranks)
+
+        cordi = [cordi[r] for r in ranks]
+        return cordi, ranks
+
+    def _add_dummy(self, item) :
+        if 0 not in item :
+            item[0] = "NONE-OUTER"
+        
+        if 1 not in item :
+            item[1] = "NONE-TOP"
+        
+        if 2 not in item :
+            item[2] = "NONE-BOTTOM"
+        
+        if 3 not in item :
+            item[3] = "NONE-SHOES"
+        return item

@@ -49,4 +49,21 @@ class DataAugmentation :
                     }
                 aug_dataset.append(data)
 
-        return aug_dataset
+        shuffled_dataset = []
+        for data in aug_dataset :
+            shuffled_dataset.append(self._shuffle(data))
+        return shuffled_dataset
+
+    def _shuffle(self, data) :
+        diag = data["diag"]
+        cordi = data["cordi"]
+        reward = data["reward"]
+
+        ranks = [0, 1, 2]
+        random.shuffle(ranks)
+
+        cordi = [cordi[r] for r in ranks]
+        reward = ranks.index(0)
+
+        shuffled = {"diag" : diag, "cordi" : cordi, "reward" : reward}
+        return shuffled
