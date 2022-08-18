@@ -165,11 +165,11 @@ def train(args) :
                     logits = model(dlg=diag, crd=cordi)
 
                     preds = torch.argsort(logits, -1).detach().cpu().numpy()
-                    eval_predictions.extend([pred.tolist() for pred in preds])
+                    eval_predictions.extend([pred.tolist()[::-1] for pred in preds])
             
             eval_tau = 0.0
             for i in range(len(eval_rewards)) :
-                tau, _ = stats.weightedtau(eval_predictions[i], eval_rewards[i])
+                tau, _ = stats.weightedtau(eval_rewards[i], eval_predictions[i])
                 eval_tau += tau
 
             eval_tau /= len(eval_rewards)
@@ -178,7 +178,7 @@ def train(args) :
             model.train()
 
             path = os.path.join(args.model_path, f"checkpoint-{step}.pt")
-            torch.save(model.state_dict(), path)
+            # torch.save(model.state_dict(), path)
 
 def seed_everything(seed):
     torch.manual_seed(seed)
