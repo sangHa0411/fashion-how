@@ -7,6 +7,7 @@ import wandb
 import numpy as np
 from tqdm import tqdm
 from scipy import stats
+from ewc import estimate_fisher
 from dotenv import load_dotenv
 from torch.utils.data import DataLoader
 
@@ -16,7 +17,7 @@ from dataset.collator import PaddingCollator
 from utils.encoder import Encoder
 from utils.augmentation import DataAugmentation
 from utils.preprocessor import DiagPreprocessor
-from utils.loader import MetaLoader, DialogueTrainLoader, DialogueTestLoader
+from utils.loader import MetaLoader, DialogueTrainLoader
 
 from models.model import Model
 from models.tokenizer import SubWordEmbReaderUtil
@@ -27,7 +28,8 @@ def train(args) :
     seed_everything(args.seed)
 
     # -- Device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    cuda_flag = torch.cuda.is_available()
+    device = torch.device("cuda" if cuda_flag else "cpu")
     print("\nDevice:", device)
 
     # -- Subword Embedding
@@ -43,10 +45,6 @@ def train(args) :
     print("\nLoading Dialogue Data...")
     train_diag_loader = DialogueTrainLoader(args.in_file_trn_dialog)
     train_raw_dataset = train_diag_loader.get_dataset()
-
-    eval_diag_loader = DialogueTestLoader(args.in_file_tst_dialog, eval_flag=True)
-    eval_dataset = eval_diag_loader.get_dataset()
-    eval_rewards = [eval_data.pop("reward")for eval_data in eval_dataset]
 
     # -- Dialogue Preprocessor
     print("\nPreprocessing Dialogue Data...")
@@ -64,7 +62,6 @@ def train(args) :
     print("\nEncoding Data...")
     encoder = Encoder(swer, img2id, num_cordi=4, mem_size=args.mem_size)
     train_encoded_dataset = encoder(train_dataset)
-    eval_encoded_dataset = encoder(eval_dataset)
 
     # -- Data Collator & Loader
     data_collator = PaddingCollator()
@@ -72,14 +69,6 @@ def train(args) :
     train_dataloader = DataLoader(train_torch_dataset, 
         batch_size=args.batch_size, 
         shuffle=True,
-        num_workers=args.num_workers,
-        collate_fn=data_collator
-    )
-
-    eval_torch_dataset = FashionHowDataset(dataset=eval_encoded_dataset)
-    eval_dataloader = DataLoader(eval_torch_dataset, 
-        batch_size=args.eval_batch_size, 
-        shuffle=False,
         num_workers=args.num_workers,
         collate_fn=data_collator
     )
@@ -99,6 +88,11 @@ def train(args) :
         dropout_prob=args.dropout_prob,
         img_feat_size=args.img_feat_size
     )
+    
+    if args.model_file is not None:
+        model_path = os.path.join(args.model_path, args.model_file)
+        model.load_state_dict(torch.load(model_path))
+        print("\nLoaded model from %s" %model_path)
 
     # -- Optimizer, Scheduler, Loss Function
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
@@ -141,44 +135,24 @@ def train(args) :
         logits = model(dlg=diag, crd=cordi)
 
         loss = loss_ce(logits, rank)
+        ewc_loss = model.ewc_loss(cuda_flag)
+        loss = loss + ewc_loss
         loss.backward()
         optimizer.step()
 
         preds = torch.argmax(logits, 1)
-        acc += torch.sum(rank == preds).item()
+        acc += torch.sum(rank == preds).item() 
 
         if step > 0 and step % args.logging_steps == 0 :
-            info = {"loss": loss.item(), "acc": acc / args.logging_steps}
+            acc = acc / (args.batch_size * args.logging_steps)
+            info = {"train/loss": loss.item(), "train/acc": acc}
             print(info)
             wandb.log(info)
             acc = 0.0
 
-        if step > 0 and step % args.eval_steps == 0 :
-            eval_predictions = []
-            with torch.no_grad() :
-                model.eval()
-                for eval_data in eval_dataloader :
-                    diag, cordi = eval_data["diag"], eval_data["cordi"]
-                    diag = diag.float().to(device)
-                    cordi = cordi.long().to(device)
-                    rank = rank.long().to(device)
-                    logits = model(dlg=diag, crd=cordi)
-
-                    preds = torch.argsort(logits, -1).detach().cpu().numpy()
-                    eval_predictions.extend([pred.tolist()[::-1] for pred in preds])
-            
-            eval_tau = 0.0
-            for i in range(len(eval_rewards)) :
-                tau, _ = stats.weightedtau(eval_rewards[i], eval_predictions[i])
-                eval_tau += tau
-
-            eval_tau /= len(eval_rewards)
-            wandb.log({"eval/tau" : eval_tau})
-            print("Evaluation Tau : %.4f" %eval_tau)
-            model.train()
-
-            path = os.path.join(args.model_path, f"checkpoint-{step}.pt")
-            # torch.save(model.state_dict(), path)
+    model.consolidate(estimate_fisher(train_dataloader, model, device, args.batch_size))
+    path = os.path.join(args.model_path, f"gAIa-final.pt")
+    torch.save(model.state_dict(), path)
 
 def seed_everything(seed):
     torch.manual_seed(seed)
@@ -200,10 +174,6 @@ if __name__ == '__main__':
     parser.add_argument('--in_file_trn_dialog', type=str,
         default='./data/task1.ddata.wst.txt',
         help='training dialog DB'
-    )
-    parser.add_argument('--in_file_tst_dialog', type=str,
-        default='./data/cl_eval_task1.wst.dev',
-        help='test dialog DB'
     )
     parser.add_argument('--in_file_fashion', type=str,
         default='./data/mdata.wst.txt.2021.10.18',
@@ -231,10 +201,6 @@ if __name__ == '__main__':
     )
     parser.add_argument('--batch_size', type=int,
         default=8,
-        help='batch size for training'
-    )
-    parser.add_argument('--eval_batch_size', type=int,
-        default=16,
         help='batch size for training'
     )
     parser.add_argument('--epochs', type=int,
@@ -272,10 +238,6 @@ if __name__ == '__main__':
     parser.add_argument('--logging_steps', type=int,
         default=100,
         help='logging steps'
-    )
-    parser.add_argument('--eval_steps', type=int,
-        default=500,
-        help='eval steps'
     )
     parser.add_argument('--use_cl', type=bool,
         default=True,
