@@ -4,6 +4,7 @@ import math
 import torch
 import random
 import argparse
+import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
 from ewc import estimate_fisher, consolidate, ewc_loss
@@ -21,6 +22,8 @@ from models.model import Model
 from models.tokenizer import SubWordEmbReaderUtil
 
 def train(args) :
+
+    print("\nTraining Data : %s" %args.in_file_trn_dialog)
 
     # -- Seed
     seed_everything(args.seed)
@@ -84,6 +87,7 @@ def train(args) :
         eval_node=args.eval_node,
         num_rnk=num_rnk,
         dropout_prob=args.dropout_prob,
+        text_feat_size=args.text_feat_size,
         img_feat_size=args.img_feat_size
     )
     
@@ -96,7 +100,8 @@ def train(args) :
             model.register_buffer('{}_mean'.format(n), p.data.clone(), persistent=False)
     
     # -- Optimizer, Scheduler, Loss Function
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=1e-3)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=1e-3)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=1e-2)
     loss_ce = torch.nn.CrossEntropyLoss().to(device)
 
     # -- Training
@@ -123,12 +128,13 @@ def train(args) :
         ewc = ewc_loss(args.lamda, model, cuda=cuda_flag)
         loss = loss + ewc
         loss.backward()
+        # nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
         optimizer.step()
 
         preds = torch.argmax(logits, 1)
         acc += torch.sum(rank == preds).item() 
 
-        if step % args.logging_steps == 0 :
+        if step > 0 and step % args.logging_steps == 0 :
             acc = acc / (args.batch_size * args.logging_steps)
             info = {"train/loss": loss.item(), "train/acc": acc}
             print(info)
@@ -212,6 +218,10 @@ if __name__ == '__main__':
         default=512,
         help='size of image feature'
     )
+    parser.add_argument('--text_feat_size', type=int,
+        default=512,
+        help='size of text feature'
+    )
     parser.add_argument('--eval_node', type=str,
         default='[6000,6000,6000,200][2000,2000]',
         help='nodes of evaluation network'
@@ -226,6 +236,10 @@ if __name__ == '__main__':
     )
     parser.add_argument('--logging_steps', type=int,
         default=100,
+        help='logging steps'
+    )
+    parser.add_argument('--max_grad_norm', type=int,
+        default=40,
         help='logging steps'
     )
     parser.add_argument('--use_cl', type=bool,

@@ -8,11 +8,10 @@ class MemN2N(nn.Module):
 	"""End-To-End Memory Network."""
 	def __init__(self, 
 		embedding_size, 
+		text_feat_size,
 		key_size, 
 		mem_size, 
-		meta_size, 
-		hops=3, 
-		nonlin=None, 
+		hops, 
 		name='MemN2N'
 		):
 		"""
@@ -20,31 +19,30 @@ class MemN2N(nn.Module):
 		"""
 		super().__init__()
 		self._embedding_size = embedding_size
-		self._embedding_size_x2 = embedding_size * 2
-		self._mem_size = mem_size
-		self._meta_size = meta_size
+		self._text_feat_size = text_feat_size
 		self._key_size = key_size
+		self._mem_size = mem_size
 		self._hops = hops
-		self._nonlin = nonlin
 		self._name = name
 
+		self.nonlin = nn.ReLU()
 		self._queries = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
 			size=(1, self._embedding_size)), 
 			requires_grad=True)
 		self._A = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-			size=(self._embedding_size, self._embedding_size_x2)), 
+			size=(self._embedding_size, self._text_feat_size)), 
 			requires_grad=True)
 		self._B = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-			size=(self._embedding_size, self._embedding_size_x2)), 
+			size=(self._embedding_size, self._text_feat_size)), 
 			requires_grad=True)
 		self._C = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-			size=(self._embedding_size, self._embedding_size_x2)), 
+			size=(self._embedding_size, self._text_feat_size)), 
 			requires_grad=True)
 		self._H = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-			size=(self._embedding_size_x2, self._embedding_size_x2)), 
+			size=(self._text_feat_size, self._text_feat_size)), 
 			requires_grad=True)
 		self._W = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
-			size=(self._embedding_size_x2, self._key_size)), 
+			size=(self._text_feat_size, self._key_size)), 
 			requires_grad=True)
 			
 	def forward(self, stories):
@@ -61,7 +59,7 @@ class MemN2N(nn.Module):
 				self._A
 			)
 			m = torch.reshape(m_temp, 
-				(-1, self._mem_size, self._embedding_size_x2)
+				(-1, self._mem_size, self._text_feat_size)
 			)
 
 			u_temp = torch.transpose(
@@ -80,14 +78,13 @@ class MemN2N(nn.Module):
 				self._C
 			)
 			c = torch.reshape(c, 
-				(-1, self._mem_size, self._embedding_size_x2)
+				(-1, self._mem_size, self._text_feat_size)
 			)
 			c_temp = torch.transpose(c, 2, 1)
 
 			o_k = torch.sum(c_temp * probs_temp, 2)
 			u_k = torch.matmul(u[-1], self._H) + o_k
-			if self._nonlin:
-				u_k = self._nonlin(u_k)
+			u_k = self.nonlin(u_k)
 
 			# [u_0, u_1, u_2 ... u_k]
 			u.append(u_k)
@@ -99,6 +96,7 @@ class RequirementNet(nn.Module):
 	"""Requirement Network"""
 	def __init__(self, 
 		emb_size, 
+		text_feat_size,
 		key_size, 
 		mem_size, 
 		hops, 
@@ -110,6 +108,7 @@ class RequirementNet(nn.Module):
 		super().__init__()
 		self._name = name
 		self._memn2n = MemN2N(emb_size, 
+			text_feat_size,
 			key_size, 
 			mem_size, 
 			hops

@@ -63,6 +63,7 @@ def inference(args) :
         eval_node=args.eval_node,
         num_rnk=num_rnk,
         dropout_prob=args.dropout_prob,
+        text_feat_size=args.text_feat_size,
         img_feat_size=args.img_feat_size
     )
     if args.model_file is not None:
@@ -139,6 +140,10 @@ if __name__ == '__main__':
     parser.add_argument('--img_feat_size', type=int,
         default=512,
         help='size of image feature'
+    )
+    parser.add_argument('--text_feat_size', type=int,
+        default=512,
+        help='size of text feature'
     )
     parser.add_argument('--eval_node', type=str,
         default='[6000,6000,6000,200][2000,2000]',

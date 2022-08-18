@@ -16,6 +16,7 @@ class Model(nn.Module):
         eval_node, 
         num_rnk,
         dropout_prob,
+        text_feat_size,
         img_feat_size,
         ):
         """
@@ -24,6 +25,7 @@ class Model(nn.Module):
         super().__init__()
         # class instance for requirement estimation
         self._requirement = RequirementNet(emb_size, 
+            text_feat_size,
             key_size,
             mem_size, 
             hops
