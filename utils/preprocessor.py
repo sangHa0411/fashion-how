@@ -16,6 +16,9 @@ class DiagPreprocessor :
             cordi = raw_dataset[i]["cordi"]
             reward = raw_dataset[i]["reward"]
 
+            if len(cordi) == 0 :
+                continue
+
             cordi_unique = []
             reward_unique = []
             j = len(cordi) - 1

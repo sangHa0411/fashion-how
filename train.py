@@ -3,12 +3,9 @@ import os
 import torch
 import random
 import argparse
-import wandb
 import numpy as np
 from tqdm import tqdm
-from scipy import stats
-from ewc import estimate_fisher
-from dotenv import load_dotenv
+from ewc import estimate_fisher, consolidate, ewc_loss
 from torch.utils.data import DataLoader
 
 from dataset.dataset import FashionHowDataset
@@ -98,22 +95,6 @@ def train(args) :
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
     loss_ce = torch.nn.CrossEntropyLoss().to(device)
 
-    # -- Wandb
-    load_dotenv(dotenv_path="wandb.env")
-    WANDB_AUTH_KEY = os.getenv("WANDB_AUTH_KEY")
-    wandb.login(key=WANDB_AUTH_KEY)
-
-    name = f"EP:{args.epochs}_BS:{args.batch_size}_LR:{args.learning_rate}"
-    wandb.init(
-        entity="sangha0411",
-        project="fashion-how",
-        group="baseline",
-        name=name
-    )
-
-    training_args = {"epochs": args.epochs, "batch_size": args.batch_size, "learning_rate": args.learning_rate}
-    wandb.config.update(training_args)
-
     # -- Training
     acc = 0.0
     model.to(device)
@@ -135,8 +116,8 @@ def train(args) :
         logits = model(dlg=diag, crd=cordi)
 
         loss = loss_ce(logits, rank)
-        ewc_loss = model.ewc_loss(cuda_flag)
-        loss = loss + ewc_loss
+        ewc = ewc_loss(4000, model, cuda=cuda_flag)
+        loss = loss + ewc
         loss.backward()
         optimizer.step()
 
@@ -147,11 +128,11 @@ def train(args) :
             acc = acc / (args.batch_size * args.logging_steps)
             info = {"train/loss": loss.item(), "train/acc": acc}
             print(info)
-            wandb.log(info)
             acc = 0.0
 
-    model.consolidate(estimate_fisher(train_dataloader, model, device, args.batch_size))
+    consolidate(estimate_fisher(train_dataloader, model, device, args.batch_size), model)
     path = os.path.join(args.model_path, f"gAIa-final.pt")
+    print("Saving Model : %s" %path)
     torch.save(model.state_dict(), path)
 
 def seed_everything(seed):
