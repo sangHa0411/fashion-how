@@ -14,6 +14,7 @@ from dataset.dataset import FashionHowDataset
 from dataset.collator import PaddingCollator
 
 from utils.encoder import Encoder
+from utils.scheduler import LinearWarmupScheduler
 from utils.augmentation import DataAugmentation
 from utils.preprocessor import DiagPreprocessor
 from utils.loader import MetaLoader, DialogueTrainLoader
@@ -103,6 +104,14 @@ def train(args) :
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     loss_ce = torch.nn.CrossEntropyLoss().to(device)
 
+    total_steps = len(train_dataloader) * args.epochs
+    warmup_steps = int(total_steps * args.warmup_ratio)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    scheduler = LinearWarmupScheduler(optimizer=optimizer, 
+        total_steps=total_steps, 
+        warmup_steps=warmup_steps
+    )
+
     # -- Training
     acc = 0.0
     model.to(device)
@@ -129,6 +138,7 @@ def train(args) :
         loss = loss + ewc
         loss.backward()
         optimizer.step()
+        scheduler.step()
 
         preds = torch.argmax(logits, 1)
         acc += torch.sum(rank == preds).item() 
@@ -188,6 +198,10 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', type=float,
         default=1e-2,
         help='weight decay'
+    )
+    parser.add_argument('--warmup_ratio', type=float,
+        default=0.1,
+        help='warmup_ratio'
     )
     parser.add_argument('--dropout_prob', type=float,
         default=0.1,

@@ -16,15 +16,15 @@ from models.tokenizer import SubWordEmbReaderUtil
 def convert(pred) :
     if pred[0] == 0 and pred[1] == 1 and pred[2] == 2 :
         return 0
-    elif pred[0] == 0 and pred[2] == 1 and pred[1] == 2 :
+    elif pred[0] == 0 and pred[1] == 2 and pred[2] == 1 :
         return 1
-    elif pred[0] == 1 and pred[2] == 0 and pred[1] == 2 :
+    elif pred[0] == 1 and pred[1] == 0 and pred[2] == 2 :
         return 2
-    elif pred[0] == 1 and pred[2] == 2 and pred[1] == 0 :
+    elif pred[0] == 1 and pred[1] == 2 and pred[2] == 0 :
         return 3
-    elif pred[0] == 2 and pred[2] == 0 and pred[1] == 1 :
+    elif pred[0] == 2 and pred[1] == 0 and pred[2] == 1 :
         return 4
-    elif pred[0] == 2 and pred[2] == 2 and pred[1] == 1 :
+    elif pred[0] == 2 and pred[1] == 1 and pred[2] == 0 :
         return 5
     else :
         return -1
