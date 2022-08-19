@@ -100,13 +100,13 @@ def train(args) :
             model.register_buffer('{}_mean'.format(n), p.data.clone(), persistent=False)
     
     # -- Optimizer, Scheduler, Loss Function
-    # optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=1e-3)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=1e-2)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     loss_ce = torch.nn.CrossEntropyLoss().to(device)
 
     # -- Training
     acc = 0.0
     model.to(device)
+    print("\nTraining model")
     train_data_iterator = iter(train_dataloader)
     total_steps = len(train_dataloader) * args.epochs
     for step in tqdm(range(total_steps)) :
@@ -128,7 +128,6 @@ def train(args) :
         ewc = ewc_loss(args.lamda, model, cuda=cuda_flag)
         loss = loss + ewc
         loss.backward()
-        # nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
         optimizer.step()
 
         preds = torch.argmax(logits, 1)
@@ -185,6 +184,10 @@ if __name__ == '__main__':
     parser.add_argument('--learning_rate', type=float,
         default=1e-5,
         help='learning rate'
+    )
+    parser.add_argument('--weight_decay', type=float,
+        default=1e-2,
+        help='weight decay'
     )
     parser.add_argument('--dropout_prob', type=float,
         default=0.1,
