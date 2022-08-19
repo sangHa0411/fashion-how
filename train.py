@@ -130,7 +130,6 @@ def train(args) :
         loss = loss + ewc
         loss.backward()
         optimizer.step()
-        scheduler.step()
 
         preds = torch.argmax(logits, 1)
         acc += torch.sum(rank == preds).item() 
