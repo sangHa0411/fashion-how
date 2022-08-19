@@ -84,7 +84,6 @@ def inference(args) :
         encoder = Encoder(swer, img2id, num_cordi=4, mem_size=args.mem_size)
         eval_encoded_dataset = encoder(eval_dataset)
 
-        
         # -- Data Collator & Loader
         data_collator = PaddingCollator()
         eval_torch_dataset = FashionHowDataset(dataset=eval_encoded_dataset)
@@ -104,8 +103,14 @@ def inference(args) :
                 cordi = cordi.long().to(device)
                 logits = model(dlg=diag, crd=cordi)
 
-                preds = torch.argsort(logits, -1).detach().cpu().numpy()
-                eval_predictions.extend([pred.tolist()[::-1] for pred in preds])
+                preds = torch.argsort(logits, -1, descending=True).detach().cpu().numpy()
+                ranks = []
+                for pred in preds :
+                    rank = [0, 0, 0]
+                    for j, p in enumerate(pred) :
+                        rank[p] = j
+                    ranks.append(rank)
+                eval_predictions.extend(ranks)
 
     predictions = []
     for pred in eval_predictions :

@@ -14,7 +14,6 @@ from dataset.dataset import FashionHowDataset
 from dataset.collator import PaddingCollator
 
 from utils.encoder import Encoder
-from utils.scheduler import LinearWarmupScheduler
 from utils.augmentation import DataAugmentation
 from utils.preprocessor import DiagPreprocessor
 from utils.loader import MetaLoader, DialogueTrainLoader
@@ -101,17 +100,10 @@ def train(args) :
             model.register_buffer('{}_mean'.format(n), p.data.clone(), persistent=False)
     
     # -- Optimizer, Scheduler, Loss Function
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     loss_ce = torch.nn.CrossEntropyLoss().to(device)
 
     total_steps = len(train_dataloader) * args.epochs
-    warmup_steps = int(total_steps * args.warmup_ratio)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-    scheduler = LinearWarmupScheduler(optimizer=optimizer, 
-        total_steps=total_steps, 
-        warmup_steps=warmup_steps
-    )
-
     # -- Training
     acc = 0.0
     model.to(device)
@@ -138,14 +130,13 @@ def train(args) :
         loss = loss + ewc
         loss.backward()
         optimizer.step()
-        scheduler.step()
 
         preds = torch.argmax(logits, 1)
         acc += torch.sum(rank == preds).item() 
 
         if step > 0 and step % args.logging_steps == 0 :
             acc = acc / (args.batch_size * args.logging_steps)
-            info = {"train/loss": loss.item(), "train/acc": acc}
+            info = {"train/loss": loss.item(), "train/ewc_loss" : ewc.item(), "train/acc": acc}
             print(info)
             acc = 0.0
 
@@ -196,7 +187,7 @@ if __name__ == '__main__':
         help='learning rate'
     )
     parser.add_argument('--weight_decay', type=float,
-        default=1e-2,
+        default=1e-3,
         help='weight decay'
     )
     parser.add_argument('--warmup_ratio', type=float,
@@ -208,7 +199,7 @@ if __name__ == '__main__':
         help='dropout prob.'
     )
     parser.add_argument('--batch_size', type=int,
-        default=8,
+        default=16,
         help='batch size for training'
     )
     parser.add_argument('--epochs', type=int,
@@ -228,7 +219,7 @@ if __name__ == '__main__':
         help='memory size for the MemN2N'
     )
     parser.add_argument('--lamda', type=int,
-        default=4000,
+        default=1000,
         help='lamda of ewc'
     )
     parser.add_argument('--img_feat_size', type=int,
@@ -254,14 +245,6 @@ if __name__ == '__main__':
     parser.add_argument('--logging_steps', type=int,
         default=100,
         help='logging steps'
-    )
-    parser.add_argument('--max_grad_norm', type=int,
-        default=40,
-        help='logging steps'
-    )
-    parser.add_argument('--use_cl', type=bool,
-        default=True,
-        help='enable continual learning'
     )
 
     args = parser.parse_args()

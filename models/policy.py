@@ -27,8 +27,8 @@ class PolicyNet(nn.Module):
         self._num_rnk = num_rnk
         self._name = name
         self._items_size = item_sizes
-        buf = eval_node[1:-1].split('][') 
-        self._num_hid_eval = list(map(int, buf[0].split(','))) 
+        buf = eval_node[1:-1].split('][')
+        self._num_hid_eval = list(map(int, buf[0].split(',')))
         self._num_hid_rnk = list(map(int, buf[1].split(',')))
         self._num_hid_layer_eval = len(self._num_hid_eval)
         self._num_hid_layer_rnk = len(self._num_hid_rnk)
@@ -37,6 +37,19 @@ class PolicyNet(nn.Module):
         self.top_embed = nn.Embedding(self._items_size[0], self._embed_size)
         self.bottom_embed = nn.Embedding(self._items_size[0], self._embed_size)
         self.shoes_embed = nn.Embedding(self._items_size[0], self._embed_size)
+        
+        self.outer_bias = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
+            size=(1, self._embed_size)), 
+            requires_grad=True)
+        self.top_bias = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
+            size=(1, self._embed_size)), 
+            requires_grad=True)
+        self.bottom_bias = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
+            size=(1, self._embed_size)), 
+            requires_grad=True)
+        self.shoes_bias = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
+            size=(1, self._embed_size)), 
+            requires_grad=True)
 
         mlp_eval_list = []
         num_in = self._embed_size * self._coordi_size + self._key_size
@@ -89,12 +102,12 @@ class PolicyNet(nn.Module):
         build graph for evaluation and ranking         
         """
         crd_outer, crd_top, crd_bottom, crd_shoes = crd[:, :, 0], crd[:, :, 1], crd[:, :, 2], crd[:, :, 3]
-        crd_outer_embed = self.outer_embed(crd_outer) 
-        crd_top_embed = self.top_embed(crd_top) 
-        crd_bottom_embed = self.bottom_embed(crd_bottom)
-        crd_shoes_embed = self.shoes_embed(crd_shoes)
+        crd_outer_embed = self.outer_embed(crd_outer)  + self.outer_bias
+        crd_top_embed = self.top_embed(crd_top) + self.top_bias
+        crd_bottom_embed = self.bottom_embed(crd_bottom) + self.bottom_bias
+        crd_shoes_embed = self.shoes_embed(crd_shoes) + self.shoes_bias
 
-        crd_embed = torch.cat([crd_outer_embed, crd_top_embed, crd_bottom_embed, crd_shoes_embed], -1)
+        crd_embed = torch.cat([crd_outer_embed, crd_top_embed, crd_bottom_embed, crd_shoes_embed], -1) 
         crd_embed_tr = torch.transpose(crd_embed, 1, 0)
         
         in_rnks = []

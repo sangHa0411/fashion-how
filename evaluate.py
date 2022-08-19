@@ -82,9 +82,15 @@ def evaluate(args) :
             cordi = cordi.long().to(device)
             logits = model(dlg=diag, crd=cordi)
 
-            preds = torch.argsort(logits, -1).detach().cpu().numpy()
-            eval_predictions.extend([pred.tolist()[::-1] for pred in preds])
-    
+            preds = torch.argsort(logits, -1, descending=True).detach().cpu().numpy()
+            ranks = []
+            for pred in preds :
+                rank = [0, 0, 0]
+                for j, p in enumerate(pred) :
+                    rank[p] = j
+                ranks.append(rank)
+            eval_predictions.extend(ranks)
+            
     eval_tau = 0.0
     for i in range(len(eval_rewards)) :
         tau, _ = stats.weightedtau(eval_rewards[i], eval_predictions[i])

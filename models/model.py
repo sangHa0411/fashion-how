@@ -40,9 +40,16 @@ class Model(nn.Module):
             num_rnk, 
         )
 
+        self._init_param()
+
         for name, param in self.named_parameters():
             n = name.replace('.', '__')
             self.register_buffer('{}_fisher'.format(n), torch.zeros(param.shape))
+
+    def _init_param(self) :
+        for p in self.parameters() :
+            if p.dim() > 1 :
+                nn.init.normal_(p, mean=0.0, std=0.01)
 
     def forward(self, dlg, crd):
         """
