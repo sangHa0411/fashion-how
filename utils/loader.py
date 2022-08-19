@@ -266,7 +266,7 @@ class DialogueTestLoader :
 
     def _preprocess(self, cordi) :
         cordi = [
-            [item if len(item) == 6 else item[2:] for item in c]
+            [item.split("_")[-1] for item in c]
             for c in cordi
         ]
         cordi = [
