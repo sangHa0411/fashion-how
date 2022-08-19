@@ -99,11 +99,11 @@ def train(args) :
             n = n.replace('.', '__')
             model.register_buffer('{}_mean'.format(n), p.data.clone(), persistent=False)
     
-    # -- Optimizer, Scheduler, Loss Function
+    # -- Optimizer, Loss Function
     loss_ce = torch.nn.CrossEntropyLoss().to(device)
-
-    total_steps = len(train_dataloader) * args.epochs
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+
+
     # -- Training
     acc = 0.0
     model.to(device)
@@ -130,6 +130,7 @@ def train(args) :
         loss = loss + ewc
         loss.backward()
         optimizer.step()
+        scheduler.step()
 
         preds = torch.argmax(logits, 1)
         acc += torch.sum(rank == preds).item() 
@@ -189,10 +190,6 @@ if __name__ == '__main__':
     parser.add_argument('--weight_decay', type=float,
         default=1e-3,
         help='weight decay'
-    )
-    parser.add_argument('--warmup_ratio', type=float,
-        default=0.1,
-        help='warmup_ratio'
     )
     parser.add_argument('--dropout_prob', type=float,
         default=0.1,
