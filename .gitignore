@@ -1,6 +1,7 @@
 data
 wandb
 wandb.env
+predictions
 gAIa_CL_model
 *.ipynb
 __pycache__

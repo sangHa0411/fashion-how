@@ -1,6 +1,5 @@
 
 import numpy as np
-from tqdm import tqdm
 
 class Encoder :
 
@@ -12,7 +11,7 @@ class Encoder :
 
     def __call__(self, dataset) :
         diag_list, cordi_list, rank_list = [], [], []
-        for data in tqdm(dataset) :
+        for data in dataset :
             diag = data["diag"]
             vectors = [self.swer.get_sent_emb(sen).tolist() for sen in diag]
             if len(vectors) >= self.mem_size :

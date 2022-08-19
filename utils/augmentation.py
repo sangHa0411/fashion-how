@@ -2,7 +2,6 @@
 import copy
 import random
 import numpy as np
-from tqdm import tqdm
 
 class DataAugmentation :
 
@@ -11,7 +10,7 @@ class DataAugmentation :
 
     def __call__(self, dataset, img2id, id2img, img_similarity) :
         aug_dataset = []
-        for d in tqdm(dataset) :
+        for d in dataset :
             aug_dataset.append(d)
 
             diag = d["diag"]

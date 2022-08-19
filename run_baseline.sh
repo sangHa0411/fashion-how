@@ -12,7 +12,7 @@ python train.py --in_file_trn_dialog ./data/task1.ddata.wst.txt \
     --logging_steps 300 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -40,7 +40,7 @@ python train.py --in_file_trn_dialog ./data/task2.ddata.wst.txt \
     --logging_steps 300 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -52,7 +52,7 @@ python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --img_feat_size 512 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -80,7 +80,7 @@ python train.py --in_file_trn_dialog ./data/task3.ddata.wst.txt \
     --logging_steps 300 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -92,7 +92,7 @@ python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --img_feat_size 512 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -104,7 +104,7 @@ python inference.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --img_feat_size 512 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -132,7 +132,7 @@ python train.py --in_file_trn_dialog ./data/task4.ddata.wst.txt \
     --logging_steps 300 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -144,7 +144,7 @@ python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --img_feat_size 512 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -156,7 +156,7 @@ python inference.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --img_feat_size 512 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -184,7 +184,7 @@ python train.py --in_file_trn_dialog ./data/task5.ddata.wst.txt \
     --logging_steps 300 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -196,7 +196,7 @@ python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --img_feat_size 512 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -208,7 +208,7 @@ python inference.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --img_feat_size 512 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -236,7 +236,7 @@ python train.py --in_file_trn_dialog ./data/task6.ddata.wst.txt \
     --logging_steps 300 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -248,7 +248,7 @@ python inference.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --img_feat_size 512 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
@@ -260,7 +260,7 @@ python inference.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --img_feat_size 512 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
-python inference.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
+python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \

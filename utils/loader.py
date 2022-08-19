@@ -3,7 +3,6 @@ import random
 import collections
 import pandas as pd 
 import numpy as np
-from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
 
 def position_of_fashion_item(item):
@@ -60,7 +59,7 @@ class MetaLoader :
             img_category[img_categorty].append(img)
 
         img_vectors = collections.defaultdict(dict) # img to vector
-        for i in tqdm(img_category) :
+        for i in img_category :
             sub_img_list = img_category[i]
 
             for k in sub_img_list :
@@ -71,7 +70,7 @@ class MetaLoader :
 
         img_similarity = collections.defaultdict(list) # img to similarity
 
-        for i in tqdm(img_vectors) :
+        for i in img_vectors :
             vectors = list(img_vectors[i].values())
             array = np.array(vectors)
             for j in range(len(vectors)) :
@@ -111,7 +110,7 @@ class DialogueTrainLoader :
         stories = self._split(df)
 
         ddataset = []
-        for i,d in enumerate(tqdm(stories)):
+        for i,d in enumerate(stories):
             d, c, r = self._extract(d)    
             data = {"diag" : d, "cordi" : c, "reward" : r}
             ddataset.append(data)
