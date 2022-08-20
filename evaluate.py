@@ -17,6 +17,8 @@ from models.tokenizer import SubWordEmbReaderUtil
 
 def evaluate(args) :
 
+    seed_everything(args.seed)
+
     # -- Device
     cuda_flag = torch.cuda.is_available()
     device = torch.device("cuda" if cuda_flag else "cpu")
@@ -99,10 +101,23 @@ def evaluate(args) :
     eval_tau /= len(eval_rewards)
     print("Data : %s \t Evaluation Tau : %.4f" %(args.in_file_tst_dialog, eval_tau))
 
+def seed_everything(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
+
 if __name__ == '__main__':
 
     # input options
     parser = argparse.ArgumentParser(description='AI Fashion Coordinator.')
+    parser.add_argument('--seed', type=int, 
+        default=42, 
+        help='random seed'
+    )
     parser.add_argument('--in_file_tst_dialog', type=str,
         default='./data/cl_eval_task1.wst.dev',
         help='test dialog DB'

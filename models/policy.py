@@ -34,9 +34,9 @@ class PolicyNet(nn.Module):
         self._num_hid_layer_rnk = len(self._num_hid_rnk)
 
         self.outer_embed = nn.Embedding(self._items_size[0], self._embed_size)
-        self.top_embed = nn.Embedding(self._items_size[0], self._embed_size)
-        self.bottom_embed = nn.Embedding(self._items_size[0], self._embed_size)
-        self.shoes_embed = nn.Embedding(self._items_size[0], self._embed_size)
+        self.top_embed = nn.Embedding(self._items_size[1], self._embed_size)
+        self.bottom_embed = nn.Embedding(self._items_size[2], self._embed_size)
+        self.shoes_embed = nn.Embedding(self._items_size[3], self._embed_size)
         
         self.outer_bias = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
             size=(1, self._embed_size)), 
@@ -60,9 +60,9 @@ class PolicyNet(nn.Module):
         for i in range(self._num_hid_layer_eval):
             num_out = self._num_hid_eval[i]
             sub_mlp_eval = nn.Sequential(
-                nn.Linear(num_in, num_out),
+                nn.BatchNorm1d(num_in),
                 nn.ReLU(),
-                nn.BatchNorm1d(num_out),
+                nn.Linear(num_in, num_out),
                 nn.Dropout(self._dropout_prob)
             )
             mlp_eval_list.append(sub_mlp_eval) 
@@ -76,9 +76,9 @@ class PolicyNet(nn.Module):
         for i in range(self._num_hid_layer_rnk):
             num_out = self._num_hid_rnk[i]
             sub_mlp_rnk = nn.Sequential(
-                nn.Linear(num_in, num_out),
+                nn.BatchNorm1d(num_in),
                 nn.ReLU(),
-                nn.BatchNorm1d(num_out),
+                nn.Linear(num_in, num_out),
                 nn.Dropout(self._dropout_prob)
             )
             mlp_rnk_list.append(sub_mlp_rnk)

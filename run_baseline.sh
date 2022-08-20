@@ -10,7 +10,7 @@ python train.py --in_file_trn_dialog ./data/task1.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 300 \
+    --logging_steps 200 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
@@ -40,7 +40,7 @@ python train.py --in_file_trn_dialog ./data/task2.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 300 \
+    --logging_steps 200 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
@@ -83,7 +83,7 @@ python train.py --in_file_trn_dialog ./data/task3.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 300 \
+    --logging_steps 200 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
@@ -139,7 +139,7 @@ python train.py --in_file_trn_dialog ./data/task4.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 300 \
+    --logging_steps 200 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
@@ -195,7 +195,7 @@ python train.py --in_file_trn_dialog ./data/task5.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 300 \
+    --logging_steps 200 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
@@ -251,7 +251,7 @@ python train.py --in_file_trn_dialog ./data/task6.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 300 \
+    --logging_steps 200 \
     --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
