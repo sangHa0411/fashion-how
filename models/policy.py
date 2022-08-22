@@ -60,9 +60,9 @@ class PolicyNet(nn.Module):
         for i in range(self._num_hid_layer_eval):
             num_out = self._num_hid_eval[i]
             sub_mlp_eval = nn.Sequential(
-                nn.BatchNorm1d(num_in),
-                nn.ReLU(),
                 nn.Linear(num_in, num_out),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_out),
                 nn.Dropout(self._dropout_prob)
             )
             mlp_eval_list.append(sub_mlp_eval) 
@@ -76,9 +76,9 @@ class PolicyNet(nn.Module):
         for i in range(self._num_hid_layer_rnk):
             num_out = self._num_hid_rnk[i]
             sub_mlp_rnk = nn.Sequential(
-                nn.BatchNorm1d(num_in),
-                nn.ReLU(),
                 nn.Linear(num_in, num_out),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_out),
                 nn.Dropout(self._dropout_prob)
             )
             mlp_rnk_list.append(sub_mlp_rnk)

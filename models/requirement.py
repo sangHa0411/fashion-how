@@ -12,7 +12,6 @@ class MemN2N(nn.Module):
 		key_size, 
 		mem_size, 
 		hops, 
-		dropout_prob,
 		name='MemN2N'
 		):
 		"""
@@ -23,11 +22,9 @@ class MemN2N(nn.Module):
 		self._text_feat_size = text_feat_size
 		self._key_size = key_size
 		self._mem_size = mem_size
-		self._dropout_prob = dropout_prob
 		self._hops = hops
 		self._name = name
 
-		self.dropout = nn.Dropout(self._dropout_prob)
 		self.nonlin = nn.ReLU()
 		self._queries = nn.Parameter(torch.normal(mean=0.0, std=0.01, 
 			size=(1, self._embedding_size)), 
@@ -88,7 +85,6 @@ class MemN2N(nn.Module):
 			o_k = torch.sum(c_temp * probs_temp, 2)
 			u_k = torch.matmul(u[-1], self._H) + o_k
 			u_k = self.nonlin(u_k)
-			u_k = self.dropout(u_k)
 
 			# [u_0, u_1, u_2 ... u_k]
 			u.append(u_k)
@@ -104,7 +100,6 @@ class RequirementNet(nn.Module):
 		key_size, 
 		mem_size, 
 		hops, 
-		dropout_prob,
 		name='RequirementNet'
 		):
 		"""
@@ -116,8 +111,7 @@ class RequirementNet(nn.Module):
 			text_feat_size,
 			key_size, 
 			mem_size, 
-			hops,
-			dropout_prob
+			hops
 		)
 
 	def forward(self, dlg):
@@ -126,4 +120,3 @@ class RequirementNet(nn.Module):
 		"""
 		req = self._memn2n(dlg)
 		return req
-

@@ -103,7 +103,6 @@ def train(args) :
     loss_ce = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
 
-
     # -- Training
     acc = 0.0
     model.to(device)

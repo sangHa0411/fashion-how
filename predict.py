@@ -93,7 +93,6 @@ def inference() :
         encoder = Encoder(swer, img2id, num_cordi=4, mem_size=MEM_SIZE)
         eval_encoded_dataset = encoder(eval_dataset)
 
-        
         # -- Data Collator & Loader
         data_collator = PaddingCollator()
         eval_torch_dataset = FashionHowDataset(dataset=eval_encoded_dataset)

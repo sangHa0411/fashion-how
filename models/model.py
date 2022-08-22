@@ -28,8 +28,7 @@ class Model(nn.Module):
             text_feat_size,
             key_size,
             mem_size, 
-            hops,
-            dropout_prob
+            hops
         )
         # class instance for ranking
         self._policy = PolicyNet(img_feat_size, 
