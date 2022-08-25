@@ -4,6 +4,36 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class FeedForward(nn.Module) :
+
+    def __init__(self, num_in, num_hidden, num_out, dropout_prob) :
+        super().__init__()
+        self._num_in = num_in
+        self._num_hidden = num_hidden
+        self._num_out = num_out
+        self._dropout_prob = dropout_prob
+
+        self._net1 = nn.Sequential(
+            nn.Linear(num_in, num_hidden),
+            nn.ReLU(),
+            nn.Linear(num_hidden, num_out),
+        )
+        self._net2 = None if num_in == num_out else \
+            nn.Linear(num_in, num_out)
+        self._drop = nn.Dropout(dropout_prob)
+        self._norm = nn.BatchNorm1d(num_out)
+
+    def forward(self, i_tensor) :
+        h_tensor = self._net1(i_tensor)
+        h_tensor = self._drop(h_tensor)
+
+        if self._net2 is not None :
+            i_tensor = self._net2(i_tensor)
+
+        o_tensor = self._norm(h_tensor + i_tensor)
+        return o_tensor
+
+
 class PolicyNet(nn.Module):
     """Class for policy network"""
     def __init__(self, 
@@ -63,7 +93,7 @@ class PolicyNet(nn.Module):
                 nn.Linear(num_in, num_out),
                 nn.ReLU(),
                 nn.BatchNorm1d(num_out),
-                nn.Dropout(self._dropout_prob)
+                nn.Dropout(dropout_prob)
             )
             mlp_eval_list.append(sub_mlp_eval) 
             num_in = num_out
@@ -75,12 +105,13 @@ class PolicyNet(nn.Module):
         num_in = self._eval_out_node * self._num_rnk + self._key_size
         for i in range(self._num_hid_layer_rnk):
             num_out = self._num_hid_rnk[i]
-            sub_mlp_rnk = nn.Sequential(
-                nn.Linear(num_in, num_out),
-                nn.ReLU(),
-                nn.BatchNorm1d(num_out),
-                nn.Dropout(self._dropout_prob)
-            )
+            sub_mlp_rnk = FeedForward(num_in, 4096, num_out, dropout_prob)
+            # sub_mlp_rnk = nn.Sequential(
+            #     nn.Linear(num_in, num_out),
+            #     nn.ReLU(),
+            #     nn.BatchNorm1d(num_out),
+            #     nn.Dropout(dropout_prob)
+            # )
             mlp_rnk_list.append(sub_mlp_rnk)
             num_in = num_out
         mlp_rnk_list.append(nn.Linear(num_in, self._num_rnk))

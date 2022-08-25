@@ -51,7 +51,7 @@ class DiagPreprocessor :
                     img_sim = img_similarity[target_id][img_id]
                     
                     rank_args = np.argsort(img_sim)[::-1][1:]
-                    select_id = np.random.randint(20)
+                    select_id = np.random.randint(50)
                     select_arg = rank_args[select_id]
                     select_img = id2img[target_id][select_arg]
 

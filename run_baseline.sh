@@ -10,8 +10,8 @@ python train.py --in_file_trn_dialog ./data/task1.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 200 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --logging_steps 300 \
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -24,7 +24,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 # STEP 2
 python train.py --in_file_trn_dialog ./data/task2.ddata.wst.txt \
@@ -40,8 +40,8 @@ python train.py --in_file_trn_dialog ./data/task2.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 200 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --logging_steps 300 \
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -54,7 +54,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -67,7 +67,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 # STEP 3
 python train.py --in_file_trn_dialog ./data/task3.ddata.wst.txt \
@@ -83,8 +83,8 @@ python train.py --in_file_trn_dialog ./data/task3.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 200 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --logging_steps 300 \
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -97,7 +97,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -110,7 +110,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -123,7 +123,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 # STEP 4
 python train.py --in_file_trn_dialog ./data/task4.ddata.wst.txt \
@@ -139,8 +139,8 @@ python train.py --in_file_trn_dialog ./data/task4.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 200 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --logging_steps 300 \
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -153,7 +153,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -166,7 +166,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -179,7 +179,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 # STEP 5
 python train.py --in_file_trn_dialog ./data/task5.ddata.wst.txt \
@@ -195,8 +195,8 @@ python train.py --in_file_trn_dialog ./data/task5.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 200 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --logging_steps 300 \
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -209,7 +209,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -222,7 +222,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -235,7 +235,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 # STEP 6
 python train.py --in_file_trn_dialog ./data/task6.ddata.wst.txt \
@@ -251,8 +251,8 @@ python train.py --in_file_trn_dialog ./data/task6.ddata.wst.txt \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --logging_steps 200 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --logging_steps 300 \
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -265,7 +265,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -278,7 +278,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
 
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
@@ -291,4 +291,4 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
     --key_size 512 \
     --text_feat_size 512 \
     --img_feat_size 512 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --eval_node [4096,4096,4096,4096,512][1024,1024,1024]
