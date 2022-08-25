@@ -2,6 +2,7 @@ sub-task3/data
 sub-task1/data
 wandb
 wandb.env
+sub-task1/checkpoints
 sub-task3/gAIa_CL_model
 *.ipynb
 *.tar.gz
