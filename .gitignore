@@ -1,8 +1,8 @@
-data
+sub-task3/data
+sub-task1/data
 wandb
 wandb.env
-predictions
-gAIa_CL_model
+sub-task3/gAIa_CL_model
 *.ipynb
 *.tar.gz
 __pycache__
