@@ -1,19 +1,23 @@
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 
-class CrossEntropyLoss(nn.Module) :
+def loss_fn(logit, label) :
 
-    def __init__(self,) :
-        super(CrossEntropyLoss, self).__init__()
-        pass
+    log_softmax = -F.log_softmax(logit, dim=-1)
+    loss = log_softmax * label
+    loss_per_data = torch.mean(loss, dim=-1)
+    mean_loss = torch.mean(loss_per_data)
+    return mean_loss
 
-    def __call__(self, logits, labels) :
+def acc_fn(logit, label) :
 
-        log_softmax = -F.log_softmax(logits, dim=-1)
-        loss = log_softmax * labels
-        loss_per_data = torch.mean(loss, dim=-1)
-        mean_loss = torch.mean(loss_per_data)
-        return mean_loss
+    acc = 0.0
+    logit = logit.detach().cpu().numpy()
+    label = label.detach().cpu().numpy()
 
+    for j in range(len(logit)) :
+        if logit[j].argmax() == label[j].argmax() :
+            acc += 1.0
+
+    return acc

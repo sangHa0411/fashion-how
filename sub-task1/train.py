@@ -1,4 +1,5 @@
 
+from itertools import accumulate
 import os
 import random
 import argparse
@@ -12,7 +13,7 @@ from utils.loader import Loader
 from utils.preprocessor import Preprocessor
 from utils.augmentation import CutMix
 from models.model import Model
-from models.loss import CrossEntropyLoss
+from models.loss import loss_fn, acc_fn
 from models.dataset import ImageDataset
 from tqdm import tqdm
 
@@ -36,9 +37,9 @@ def train(args):
         train_dataset = dataset[:i*size] + dataset[(i+1)*size:]
         eval_dataset = dataset[i*size:(i+1)*size]
 
-        # -- Data Augmentation
-        augmentation = CutMix(args.num_aug)
-        train_dataset = augmentation(train_dataset)
+        # # -- Data Augmentation
+        # augmentation = CutMix(args.num_aug)
+        # train_dataset = augmentation(train_dataset)
 
         # -- Preprocess Data
         preprocessor = Preprocessor(args.img_size)
@@ -64,18 +65,15 @@ def train(args):
         )
 
         # -- model
-        daily_size, gender_size, emb_size = loader.get_label_size()
+        label_size = loader.get_label_size()
         model = Model(args.hidden_size,
-            daily_size,
-            gender_size,
-            emb_size,
+            label_size["daily"],
+            label_size["gender"],
+            label_size["embellishment"],
             args.dropout_prob,
             pretrained=True
         )
         model.to(device)
-
-        # -- loss
-        ce_loss = CrossEntropyLoss().to(device)
 
         # -- Optimizer & Scheduler
         iteration = int(args.epochs / 2)
@@ -91,7 +89,7 @@ def train(args):
         wandb.init(
             entity="sangha0411",
             project="fashion-how",
-            group="sub-task1",
+            group=f"sub-task1",
             name=name
         )
 
@@ -122,9 +120,9 @@ def train(args):
 
             daily_logit, gender_logit, emb_logit = model(img)
 
-            daily_loss = ce_loss(daily_logit, daily)
-            gender_loss = ce_loss(gender_logit, gender)
-            emb_loss = ce_loss(emb_logit, emb)
+            daily_loss = loss_fn(daily_logit, daily)
+            gender_loss = loss_fn(gender_logit, gender)
+            emb_loss = loss_fn(emb_logit, emb)
 
             loss = daily_loss + gender_loss + emb_loss
             loss.backward()
@@ -133,7 +131,7 @@ def train(args):
             scheduler.step()
 
             if step > 0 and step % args.logging_steps == 0 :
-                info = {"train/learning_rate" : optimizer.param_groups[0]["lr"], 
+                info = {"train/learning_rate" : scheduler.get_last_lr()[0], 
                     "train/daily_loss": daily_loss.item(), 
                     "train/gender_loss" : gender_loss.item(), 
                     "train/embellishment_loss": emb_loss.item(),
@@ -146,9 +144,7 @@ def train(args):
                 print("\nEvaluating model at %d step" %step)
                 with torch.no_grad() :
                     model.eval()
-                    daily_acc = 0.0
-                    gender_acc = 0.0
-                    emb_acc = 0.0
+                    daily_acc, gender_acc, emb_acc = 0.0, 0.0, 0.0
 
                     for eval_data in tqdm(eval_dataloader) :
 
@@ -159,30 +155,25 @@ def train(args):
 
                         daily_logit, gender_logit, emb_logit = model(img)
 
-                        daily_preds = torch.argmax(daily_logit, dim=0)
-                        gender_preds = torch.argmax(gender_logit, dim=0)
-                        emb_preds = torch.argmax(emb_logit, dim=0)
+                        daily_acc += acc_fn(daily_logit, daily)
+                        gender_acc += acc_fn(gender_logit, gender)
+                        emb_acc += acc_fn(emb_logit, emb)
 
-                        daily_acc += torch.sum(daily_preds == daily).item()
-                        gender_acc += torch.sum(gender_preds == gender).item()
-                        emb_acc += torch.sum(emb_preds == emb).item()
-                    
                     daily_acc /= len(eval_dataset)
                     gender_acc /= len(eval_dataset)
                     emb_acc /= len(eval_dataset)
-
+                        
                     info = {"eval/daily_acc": daily_acc, 
                         "eval/gender_acc" : gender_acc, 
                         "eval/embellishment_acc": emb_acc,
                         "eval/step" : step,
                     }
-                    wandb.log(info) 
+                    wandb.log(info)  
                     print(info)
-
                     model.train()
 
-                path = os.path.join(args.save_path , f"fold{i}", f"checkpoint-{step}.pt")
-                torch.save(model.state_dict(), path)
+                # path = os.path.join(args.save_path, f"fold{i}", f"checkpoint-{step}.pt")
+                # torch.save(model.state_dict(), path)
 
         wandb.finish()
 
@@ -253,7 +244,7 @@ if __name__ == '__main__':
         help='batch size for evaluation'
     )
     parser.add_argument('--epochs', type=int,
-        default=10,
+        default=100,
         help='epochs to training'
     )
     parser.add_argument('--num_workers', type=int,
@@ -261,12 +252,12 @@ if __name__ == '__main__':
         help='the number of workers for data loader'
     )
     parser.add_argument('--logging_steps', type=int,
-        default=100,
+        default=50,
         help='logging steps'
     )
     parser.add_argument('--save_steps', type=int,
-        default=500,
-        help='logging steps'
+        default=100,
+        help='save steps'
     )
 
     args = parser.parse_args()
