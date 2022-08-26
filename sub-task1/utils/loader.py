@@ -73,5 +73,6 @@ class Loader :
         daily_size = len(self._df["Daily"].unique())
         gender_size = len(self._df["Gender"].unique())
         emb_size = len(self._df["Embellishment"].unique())
-
-        return daily_size, gender_size, emb_size
+        
+        label_size = {"daily" : daily_size, "gender" : gender_size, "embellishment" : emb_size}
+        return label_size

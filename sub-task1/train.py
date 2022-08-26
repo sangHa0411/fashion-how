@@ -37,9 +37,9 @@ def train(args):
         train_dataset = dataset[:i*size] + dataset[(i+1)*size:]
         eval_dataset = dataset[i*size:(i+1)*size]
 
-        # # -- Data Augmentation
-        # augmentation = CutMix(args.num_aug)
-        # train_dataset = augmentation(train_dataset)
+        # -- Data Augmentation
+        augmentation = CutMix(args.num_aug)
+        train_dataset = augmentation(train_dataset)
 
         # -- Preprocess Data
         preprocessor = Preprocessor(args.img_size)
