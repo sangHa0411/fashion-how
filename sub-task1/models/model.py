@@ -1,6 +1,6 @@
 
 import torch.nn as nn
-from torchvision.models.densenet import densenet201
+from torchvision.models.densenet import densenet169
 
 class Model(nn.Module):
     def __init__(self, 
@@ -14,9 +14,9 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
         if pretrained == True :
-            self._backbone = densenet201(pretrained=True, progress=True)
+            self._backbone = densenet169(pretrained=True, progress=True)
         else :
-            self._backbone = densenet201(pretrained=False, progress=False)
+            self._backbone = densenet169(pretrained=False, progress=False)
 
         self._feature_size = 1000
         self._hidden_size = hidden_size
