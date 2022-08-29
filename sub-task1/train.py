@@ -74,7 +74,7 @@ def train(args):
         model.to(device)
 
         # -- Optimizer & Scheduler
-        iteration = 2
+        iteration = 4
         optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iteration, eta_min=0)
 
