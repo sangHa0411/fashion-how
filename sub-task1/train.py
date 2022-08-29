@@ -1,5 +1,3 @@
-
-from itertools import accumulate
 import os
 import random
 import argparse
@@ -37,7 +35,7 @@ def train(args):
         train_dataset = dataset[:i*size] + dataset[(i+1)*size:]
         eval_dataset = dataset[i*size:(i+1)*size]
 
-        # -- Data Augmentation
+        # -- Data Augmentation 
         augmentation = CutMix(args.num_aug)
         train_dataset = augmentation(train_dataset)
 
@@ -47,7 +45,7 @@ def train(args):
         eval_dataset = preprocessor(eval_dataset)
 
         print("\nThe number of train dataset : %d" %len(train_dataset))
-        print("\nThe number of eval dataset : %d" %len(eval_dataset))
+        print("The number of eval dataset : %d\n" %len(eval_dataset))
 
         # -- Torch Dataset & Dataloader
         train_dataset = ImageDataset(train_dataset)
@@ -76,7 +74,7 @@ def train(args):
         model.to(device)
 
         # -- Optimizer & Scheduler
-        iteration = int(args.epochs / 2)
+        iteration = 2
         optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
         scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iteration, eta_min=0)
 
@@ -172,8 +170,8 @@ def train(args):
                     print(info)
                     model.train()
 
-                # path = os.path.join(args.save_path, f"fold{i}", f"checkpoint-{step}.pt")
-                # torch.save(model.state_dict(), path)
+                path = os.path.join(args.save_path, f"fold{i}", f"checkpoint-{step}.pt")
+                torch.save(model.state_dict(), path)
 
         wandb.finish()
 
