@@ -12,7 +12,7 @@ class Preprocessor :
             img = data["image"]
             height, width, _ = img.shape 
 
-            new_img = np.zeros((self._img_size, self._img_size, 3))
+            new_img = np.ones((self._img_size, self._img_size, 3))
             if height != width :
                 if width == self._img_size :
                     height_start = int((self._img_size - height) / 2)
