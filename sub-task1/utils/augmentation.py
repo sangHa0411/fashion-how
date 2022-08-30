@@ -9,16 +9,14 @@ class CutMix :
         self._num_aug = num_aug
 
     def __call__(self, dataset) :
-
         aug_dataset = []
 
         for i, data in enumerate(tqdm(dataset)) :
-
             # source
             org_img = data["image"]
             org_h, org_w, _ = org_img.shape
-            org_daily = daily = data["daily"]
-            org_gender = gender = data["gender"]
+            org_daily = data["daily"]
+            org_gender = data["gender"]
             org_emb = data["embellishment"]
 
             aug_dataset.append(data)

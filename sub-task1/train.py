@@ -12,6 +12,7 @@ from utils.preprocessor import Preprocessor
 from utils.augmentation import CutMix
 from models.model import Model
 from models.loss import loss_fn, acc_fn
+from models.scheduler import LinearWarmupScheduler
 from models.dataset import ImageDataset
 from tqdm import tqdm
 
@@ -78,9 +79,12 @@ def train(args):
     model.to(device)
 
     # -- Optimizer & Scheduler
-    iteration = 2
+    # iteration = 2
+    total_steps = len(train_dataloader) * args.epochs
+    warmup_steps = int(args.warmup_ratio * total_steps)
     optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iteration, eta_min=0)
+    # scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iteration, eta_min=0)
+    scheduler = LinearWarmupScheduler(optimizer, total_steps, warmup_steps)
 
     # -- Wandb
     load_dotenv(dotenv_path="wandb.env")
@@ -105,7 +109,6 @@ def train(args):
     # -- Training
     print("\nTraining")
     train_data_iterator = iter(train_dataloader)
-    total_steps = len(train_dataloader) * args.epochs
     for step in tqdm(range(total_steps)) :
         try :
             data = next(train_data_iterator)
@@ -165,14 +168,17 @@ def train(args):
                     daily_acc /= len(eval_dataset)
                     gender_acc /= len(eval_dataset)
                     emb_acc /= len(eval_dataset)
-                        
+
+                    acc = (daily_acc + gender_acc + emb_acc) / 3
+                     
                     info = {"eval/daily_acc": daily_acc, 
                         "eval/gender_acc" : gender_acc, 
                         "eval/embellishment_acc": emb_acc,
+                        "eval/acc" : acc,
                         "eval/step" : step,
                     }
                     wandb.log(info)  
-                    print(info)
+                    print(info) 
                     model.train()
 
             path = os.path.join(args.save_path, f"checkpoint-{step}.pt")
@@ -209,6 +215,10 @@ if __name__ == '__main__':
     parser.add_argument('--hidden_size', type=int, 
         default=2048, 
         help='hidden size of model'
+    )
+    parser.add_argument('--warmup_ratio', type=float, 
+        default=0.05, 
+        help='warmup ratio of total steps'
     )
     parser.add_argument('--num_aug', type=int, 
         default=5, 
