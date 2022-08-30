@@ -29,9 +29,12 @@ def train(args):
     print("The number of dataset : %d" %len(dataset))
     random.shuffle(dataset)
 
-    size = int(len(dataset) / 5)
-    train_dataset = dataset[size:]
-    eval_dataset = dataset[:size]
+    if args.do_eval :
+        size = int(len(dataset) / 5)
+        train_dataset = dataset[size:]
+        eval_dataset = dataset[:size]
+    else :
+        train_dataset = dataset
 
     # -- Data Augmentation 
     augmentation = CutMix(args.num_aug)
@@ -40,10 +43,12 @@ def train(args):
     # -- Preprocess Data
     preprocessor = Preprocessor(args.img_size)
     train_dataset = preprocessor(train_dataset)
-    eval_dataset = preprocessor(eval_dataset)
+    if args.do_eval :
+        eval_dataset = preprocessor(eval_dataset)
 
     print("\nThe number of train dataset : %d" %len(train_dataset))
-    print("The number of eval dataset : %d\n" %len(eval_dataset))
+    if args.do_eval :
+        print("The number of eval dataset : %d\n" %len(eval_dataset))
 
     # -- Torch Dataset & Dataloader
     train_dataset = ImageDataset(train_dataset)
@@ -53,12 +58,13 @@ def train(args):
         num_workers=args.num_workers
     )
 
-    eval_dataset = ImageDataset(eval_dataset)
-    eval_dataloader = DataLoader(eval_dataset, 
-        batch_size=args.eval_batch_size, 
-        shuffle=False, 
-        num_workers=args.num_workers
-    )
+    if args.do_eval :
+        eval_dataset = ImageDataset(eval_dataset)
+        eval_dataloader = DataLoader(eval_dataset, 
+            batch_size=args.eval_batch_size, 
+            shuffle=False, 
+            num_workers=args.num_workers
+        )
 
     # -- model
     label_size = loader.get_label_size()
@@ -137,36 +143,37 @@ def train(args):
             print(info)
 
         if step > 0 and step % args.save_steps == 0 :
-            print("\nEvaluating model at %d step" %step)
-            with torch.no_grad() :
-                model.eval()
-                daily_acc, gender_acc, emb_acc = 0.0, 0.0, 0.0
+            if args.do_eval :
+                print("\nEvaluating model at %d step" %step)
+                with torch.no_grad() :
+                    model.eval()
+                    daily_acc, gender_acc, emb_acc = 0.0, 0.0, 0.0
 
-                for eval_data in tqdm(eval_dataloader) :
+                    for eval_data in tqdm(eval_dataloader) :
 
-                    img = eval_data["image"].to(device)
-                    daily = eval_data["daily"].to(device)
-                    gender = eval_data["gender"].to(device)
-                    emb = eval_data["embellishment"].to(device)
+                        img = eval_data["image"].to(device)
+                        daily = eval_data["daily"].to(device)
+                        gender = eval_data["gender"].to(device)
+                        emb = eval_data["embellishment"].to(device)
 
-                    daily_logit, gender_logit, emb_logit = model(img)
+                        daily_logit, gender_logit, emb_logit = model(img)
 
-                    daily_acc += acc_fn(daily_logit, daily)
-                    gender_acc += acc_fn(gender_logit, gender)
-                    emb_acc += acc_fn(emb_logit, emb)
+                        daily_acc += acc_fn(daily_logit, daily)
+                        gender_acc += acc_fn(gender_logit, gender)
+                        emb_acc += acc_fn(emb_logit, emb)
 
-                daily_acc /= len(eval_dataset)
-                gender_acc /= len(eval_dataset)
-                emb_acc /= len(eval_dataset)
-                    
-                info = {"eval/daily_acc": daily_acc, 
-                    "eval/gender_acc" : gender_acc, 
-                    "eval/embellishment_acc": emb_acc,
-                    "eval/step" : step,
-                }
-                wandb.log(info)  
-                print(info)
-                model.train()
+                    daily_acc /= len(eval_dataset)
+                    gender_acc /= len(eval_dataset)
+                    emb_acc /= len(eval_dataset)
+                        
+                    info = {"eval/daily_acc": daily_acc, 
+                        "eval/gender_acc" : gender_acc, 
+                        "eval/embellishment_acc": emb_acc,
+                        "eval/step" : step,
+                    }
+                    wandb.log(info)  
+                    print(info)
+                    model.train()
 
             path = os.path.join(args.save_path, f"checkpoint-{step}.pt")
             torch.save(model.state_dict(), path)
@@ -190,6 +197,10 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, 
         default=42, 
         help='random seed'
+    )
+    parser.add_argument('--do_eval', type=bool, 
+        default=False, 
+        help='evaluation flag'
     )
     parser.add_argument('--img_size', type=int, 
         default=224, 
@@ -216,7 +227,7 @@ if __name__ == '__main__':
         help='path to save model'
     )
     parser.add_argument('--learning_rate', type=float,
-        default=3e-5,
+        default=5e-5,
         help='learning rate'
     )
     parser.add_argument('--weight_decay', type=float,
@@ -236,7 +247,7 @@ if __name__ == '__main__':
         help='batch size for evaluation'
     )
     parser.add_argument('--epochs', type=int,
-        default=100,
+        default=5,
         help='epochs to training'
     )
     parser.add_argument('--num_workers', type=int,
@@ -244,11 +255,11 @@ if __name__ == '__main__':
         help='the number of workers for data loader'
     )
     parser.add_argument('--logging_steps', type=int,
-        default=50,
+        default=100,
         help='logging steps'
     )
     parser.add_argument('--save_steps', type=int,
-        default=100,
+        default=500,
         help='save steps'
     )
 

@@ -1,7 +1,7 @@
 python train.py \
     --learning_rate 5e-5 \
     --epochs 5 \
-    --num_aug 5 \
+    --num_aug 3 \
     --batch_size 128 \
     --eval_batch_size 16 \
     --img_size 224 \
