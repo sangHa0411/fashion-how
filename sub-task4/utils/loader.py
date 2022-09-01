@@ -16,7 +16,7 @@ def position_of_fashion_item(item):
     elif prefix=='SE':
         idx = 3
     else:
-        raise ValueError('{} do not exists.'.format(item))
+        idx = 4
     return idx
 
 class MetaLoader :

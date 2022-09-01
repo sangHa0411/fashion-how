@@ -68,11 +68,8 @@ class PolicyNet(nn.Module):
         """
         evaluate candidates
         """
-        # (batch_size, num_feature, feature_size)
         crd_feature = torch.mean(crd, dim=1)
-
-        # (batch_size, num_feature * feature_size)
-        crd_tensor = [crd_feature[:, i, :] for i in range(self._num_cordi)]
+        crd_tensor = [crd_feature[:, i, :] for i in range(self._num_feature)]
         crd_tensor = torch.cat(crd_tensor, dim=-1) 
 
         crd_and_req = torch.cat((crd_tensor, req), 1) 

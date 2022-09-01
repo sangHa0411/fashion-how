@@ -6,6 +6,7 @@ wandb.env
 sub-task1/checkpoints
 sub-task3/gAIa_CL_model
 sub-task4/gAIa_model
+sub-task4/results
 *.ipynb
 *.tar.gz
 __pycache__
