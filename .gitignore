@@ -1,9 +1,11 @@
 sub-task3/data
 sub-task1/data
+sub-task4/data
 wandb
 wandb.env
 sub-task1/checkpoints
 sub-task3/gAIa_CL_model
+sub-task4/gAIa_model
 *.ipynb
 *.tar.gz
 __pycache__
