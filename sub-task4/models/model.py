@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn 
-from torch.autograd import Variable
 from models.policy import PolicyNet
 from models.requirement import RequirementNet
 
@@ -15,6 +14,10 @@ class Model(nn.Module):
         num_rnk,
         num_feature,
         num_cordi, 
+        num_layers,
+        d_model,
+        hidden_size,
+        num_head,
         dropout_prob,
         text_feat_size,
         img_feat_size,
@@ -38,6 +41,10 @@ class Model(nn.Module):
             num_rnk, 
             num_feature,
             num_cordi,
+            num_layers,
+            d_model,
+            hidden_size, 
+            num_head,
         )
 
         self._init_param()

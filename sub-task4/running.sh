@@ -3,14 +3,18 @@ python train.py --in_file_trn_dialog data/ddata.wst.txt.2021.6.9 \
     --subWordEmb_path data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --img_feat_dir data/img_feats \
     --model_path gAIa_model \
-    --epochs 5 \
+    --epochs 10 \
     --learning_rate 5e-5 \
     --dropout_prob 0.1 \
-    --batch_size 16 \
+    --batch_size 64 \
+    --num_layers 6 \
+    --d_model 512 \
+    --hidden_size 2048 \
+    --num_head 8 \
     --hops 3 \
-    --augmentation_size 2 \
+    --augmentation_size 3 \
     --mem_size 24 \
     --key_size 512 \
     --text_feat_size 512 \
-    --logging_steps 300 \
-    --eval_node [6000,6000,6000,6000,512][2000,2000,2000]
+    --logging_steps 500 \
+    --eval_node [1024,4096,4096]

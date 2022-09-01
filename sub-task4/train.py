@@ -86,6 +86,10 @@ def train(args) :
         num_rnk=NUM_RNK,
         num_feature=NUM_FEATURE,
         num_cordi=NUM_CORDI,
+        num_layers=args.num_layers,
+        d_model=args.d_model,
+        hidden_size=args.hidden_size,
+        num_head=args.num_head,
         dropout_prob=args.dropout_prob,
         text_feat_size=args.text_feat_size,
         img_feat_size=IMG_FEAT_SIZE
@@ -192,13 +196,29 @@ if __name__ == '__main__':
         default=1e-3,
         help='weight decay'
     )
-    parser.add_argument('--dropout_prob', type=float,
-        default=0.1,
-        help='dropout prob.'
+    parser.add_argument('--num_layers', type=int,
+        default=6,
+        help='the number of hidden layers'
+    )
+    parser.add_argument('--d_model', type=int,
+        default=512,
+        help='d_model of encoder'
+    )
+    parser.add_argument('--hidden_size', type=int,
+        default=2048,
+        help='hidden size of encoder'
+    )
+    parser.add_argument('--num_head', type=int,
+        default=8,
+        help='the number of encoder head'
     )
     parser.add_argument('--batch_size', type=int,
         default=4,
         help='batch size for training'
+    )
+    parser.add_argument('--dropout_prob', type=float,
+        default=0.1,
+        help='dropout prob.'
     )
     parser.add_argument('--epochs', type=int,
         default=10,
