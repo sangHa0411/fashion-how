@@ -181,7 +181,7 @@ def train(args):
                     print(info) 
                     model.train()
 
-            path = os.path.join(args.save_path, f"checkpoint-{step}.pt")
+            path = os.path.join(args.save_path, f"model{args.num_model}", f"checkpoint-{step}.pt")
             torch.save(model.state_dict(), path)
 
     wandb.finish()
@@ -207,6 +207,10 @@ if __name__ == '__main__':
     parser.add_argument('--do_eval', type=bool, 
         default=False, 
         help='evaluation flag'
+    )
+    parser.add_argument('--num_model', type=int, 
+        default=0, 
+        help='number of model'
     )
     parser.add_argument('--img_size', type=int, 
         default=224, 

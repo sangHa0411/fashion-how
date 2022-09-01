@@ -7,6 +7,7 @@ from utils.loader import Loader
 from utils.preprocessor import Preprocessor
 from models.model import Model
 from models.dataset import ImageDataset
+from tqdm import tqdm
 
 FOLD_SIZE = 5
 IMG_SIZE = 224
@@ -46,71 +47,47 @@ def predict():
     # -- model    
     label_size = {"daily" : 7, "gender" : 6, "embellishment" : 3}
 
-    daily_pred_list = []
-    gender_pred_list = []
-    emb_pred_list = []
 
-    for i in range(FOLD_SIZE) :
-        print("\n%dth Model inference" %i)
-        model = Model(HIDDEN_SIZE,
-            label_size["daily"],
-            label_size["gender"],
-            label_size["embellishment"],
-            DROPOUT_PROB,
-            pretrained=False
-        )
-        model_path = f"/home/work/model/checkpoints/fold{i}/checkpoint-2500.pt"
-        model.load_state_dict(torch.load(model_path, map_location=cuda_str))
-        model.to(device)
+    print("\nLoading Model")
+    model = Model(HIDDEN_SIZE,
+        label_size["daily"],
+        label_size["gender"],
+        label_size["embellishment"],
+        DROPOUT_PROB,
+        pretrained=False
+    )
+    model_path = f"/home/work/model/checkpoints/model1/checkpoint-1000.pt"
+    model.load_state_dict(torch.load(model_path, map_location=cuda_str))
+    model.to(device)
 
-        # -- Predict
-        with torch.no_grad() :
-            model.eval()
+    daily_predictions = []
+    gender_predictions = []
+    emb_predictions = []
 
-            daily_predictions = []
-            gender_predictions = []
-            emb_predictions = []
+    # -- Predict
+    with torch.no_grad() :
+        model.eval()
 
-            for eval_data in dataloader :
-                img = eval_data["image"].to(device)
-                daily_logit, gender_logit, emb_logit = model(img)
+        for eval_data in tqdm(dataloader) :
+            img = eval_data["image"].to(device)
+            daily_logit, gender_logit, emb_logit = model(img)
 
-                daily_pred = torch.argmax(daily_logit, -1)
-                gender_pred = torch.argmax(gender_logit, -1)
-                emb_pred = torch.argmax(emb_logit, -1)
+            daily_pred = torch.argmax(daily_logit, -1)
+            gender_pred = torch.argmax(gender_logit, -1)
+            emb_pred = torch.argmax(emb_logit, -1)
 
-                daily_predictions.extend(daily_logit.detach().cpu().numpy().tolist())
-                gender_predictions.extend(gender_logit.detach().cpu().numpy().tolist())
-                emb_predictions.extend(emb_logit.detach().cpu().numpy().tolist())
+            daily_predictions.extend(daily_pred.detach().cpu().numpy().tolist())
+            gender_predictions.extend(gender_pred.detach().cpu().numpy().tolist())
+            emb_predictions.extend(emb_pred.detach().cpu().numpy().tolist())
 
-            daily_pred_list.append(daily_predictions)
-            gender_pred_list.append(gender_predictions)
-            emb_pred_list.append(emb_predictions)
-
-    daily_id_list = []
-    gender_id_list = []
-    emb_id_list = []
-    print("\nEnsemable Logits")
-    for i in range(len(df)) :
-        daily_preds = [daily_predictions[j][i] for j in range(FOLD_SIZE)]
-        daily_pred_sum = np.sum(daily_preds, axis=0)
-        daily_pred_sum.argmax()
-        daily_id_list.append(daily_pred_sum)
-            
-        gender_preds = [gender_predictions[j][i] for j in range(FOLD_SIZE)]
-        gender_pred_sum = np.sum(gender_preds, axis=0)
-        gender_pred_sum.argmax()
-        gender_id_list.append(gender_pred_sum)
-
-        emb_preds = [emb_predictions[j][i] for j in range(FOLD_SIZE)]
-        emb_pred_sum = np.sum(emb_preds, axis=0)
-        emb_pred_sum.argmax()
-        emb_id_list.append(emb_pred_sum)
+    daily_predictions = np.array(daily_predictions)
+    gender_predictions = np.array(gender_predictions)
+    emb_predictions = np.array(emb_predictions)
 
     print("\nSaving results")
-    df['Daily'] = daily_id_list.astype(int)
-    df['Gender'] = gender_id_list.astype(int)
-    df['Embellishment'] = emb_id_list.astype(int)
+    df['Daily'] = daily_predictions.astype(int)
+    df['Gender'] = gender_predictions.astype(int)
+    df['Embellishment'] = emb_predictions.astype(int)
     df.to_csv('/home/work/model/prediction.csv', index=False)
 
 if __name__ == '__main__':
