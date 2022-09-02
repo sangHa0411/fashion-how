@@ -6,7 +6,9 @@ from tqdm import tqdm
 
 class DataAugmentation :
 
-    def __init__(self, num_aug) :
+    def __init__(self, num_rank, num_cordi, num_aug) :
+        self.num_rank = num_rank
+        self.num_cordi = num_cordi
         self.num_aug = num_aug
 
     def __call__(self, dataset, img2id, id2img, img_similarity) :
@@ -19,34 +21,29 @@ class DataAugmentation :
             reward = d["reward"]
 
             for j in range(self.num_aug) :
-                source_id = np.random.randint(3)
-                source = cordi[source_id]
 
-                targets = [k for k in range(4) if "NONE" not in source[k]]
-                target_id = random.sample(targets, 1)[0]
-                target_img = source[target_id]
+                org_cordi = cordi[0]
+                targets = [k for k in range(self.num_cordi) if "NONE" not in org_cordi[k]]
 
-                img_id = img2id[target_id][target_img]
-                img_sim = img_similarity[target_id][img_id]
-                
-                rank_args = np.argsort(img_sim)[::-1][1:]
-                select_id = np.random.randint(50)
-                select_arg = rank_args[select_id]
-                select_img = id2img[target_id][select_arg]
+                aug_cordi = copy.deepcopy(org_cordi)
+                target_ids = random.sample(targets, 2)
+                for t_id in target_ids :
+                    t_img = org_cordi[t_id]
 
-                aug = copy.deepcopy(source)
-                aug[target_id] = select_img
+                    img_id = img2id[t_id][t_img]
+                    img_sim = img_similarity[t_id][img_id]
+                    
+                    rank_args = np.argsort(img_sim)[::-1][1:]
+                    select_id = np.random.randint(100)
+                    select_arg = rank_args[select_id]
+                    select_img = id2img[t_id][select_arg]
 
-                if source_id == 0 :
-                    data = {"diag" : diag, 
-                        "cordi" : [cordi[0]] + [cordi[np.random.randint(1,3)]] + [aug], 
-                        "reward" : reward
-                    }
-                else :
-                    data = {"diag" : diag, 
-                        "cordi" : cordi[:source_id] + [aug] + cordi[source_id+1:], 
-                        "reward" : reward
-                    }
+                    aug_cordi[t_id] = select_img
+
+                data = {"diag" : diag, 
+                    "cordi" : [cordi[0], cordi[np.random.randint(1,3)]] + [aug_cordi],
+                    "reward" : reward
+                }
                 aug_dataset.append(data)
 
         shuffled_dataset = []

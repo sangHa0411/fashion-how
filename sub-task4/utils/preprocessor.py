@@ -20,7 +20,8 @@ class DiagPreprocessor :
             if "USER_SUCCESS" not in reward :
                 continue
 
-            if len(cordi) == 0 :
+            valid_items = [k for k in range(self.num_cordi) if "NONE" not in cordi[-1][k]]
+            if len(valid_items) < 2 :
                 continue
 
             cordi_unique = []
@@ -39,29 +40,32 @@ class DiagPreprocessor :
                         prev_cordi = cordi[j]
                 j -= 1
 
+
             if len(cordi_unique) > self.num_rank :
                 data = {"diag" : diag, "cordi" : cordi_unique[:3], "reward" : 0}    
             else :
                 aug_size = self.num_rank - len(cordi_unique)
                 aug_list = []
                 for a in range(aug_size) :
-                    rand_id = np.random.randint(len(cordi_unique))
-                    org = cordi_unique[rand_id]
-                    targets = [k for k in range(self.num_cordi) if "NONE" not in org[k]]
-                    target_id = random.sample(targets, 1)[0]
-                    target_img = org[target_id]
+                    org_cordi = cordi_unique[0]
+                    targets = [k for k in range(self.num_cordi) if "NONE" not in org_cordi[k]]
                     
-                    img_id = img2id[target_id][target_img]
-                    img_sim = img_similarity[target_id][img_id]
+                    aug_cordi = copy.deepcopy(org_cordi)
+                    target_ids = random.sample(targets, 2)
+                    for t_id in target_ids :
+                        t_img = org_cordi[t_id]
                     
-                    rank_args = np.argsort(img_sim)[::-1][1:]
-                    select_id = np.random.randint(50)
-                    select_arg = rank_args[select_id]
-                    select_img = id2img[target_id][select_arg]
+                        img_id = img2id[t_id][t_img]
+                        img_sim = img_similarity[t_id][img_id]
+                        
+                        rank_args = np.argsort(img_sim)[::-1][1:]
+                        select_id = np.random.randint(100)
+                        select_arg = rank_args[select_id]
+                        select_img = id2img[t_id][select_arg]
 
-                    aug = copy.deepcopy(org)
-                    aug[target_id] = select_img
-                    aug_list.append(aug)
+                        aug_cordi[t_id] = select_img
+
+                    aug_list.append(aug_cordi)
                 data = {"diag" : diag, "cordi" : cordi_unique + aug_list, "reward" : 0}    
             dataset.append(data)
 

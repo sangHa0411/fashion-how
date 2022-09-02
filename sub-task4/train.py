@@ -58,7 +58,7 @@ def train(args) :
 
     # -- Data Augmentation
     print("\nData Augmentation...")
-    data_augmentation = DataAugmentation(num_aug=args.augmentation_size)
+    data_augmentation = DataAugmentation(num_rank=3, num_cordi=4, num_aug=args.augmentation_size)
     train_dataset = data_augmentation(train_dataset, img2id, id2img, img_similarity)
     print("The number of train dataset : %d" %len(train_dataset))
 
@@ -137,8 +137,11 @@ def train(args) :
             info = {"train/loss": loss.item(), "train/acc": acc, "train/learning_rate" : lr, "train/step" : step}
             print(info)
             acc = 0.0
-        
 
+        if step > 0 and step % args.save_steps == 0 :
+            path = os.path.join(args.model_path, f"gAIa-final-{step}.pt")
+            torch.save(model.state_dict, path)
+            
     path = os.path.join(args.model_path, f"gAIa-final.pt")
     print("Saving Model : %s" %path)
     torch.save(model.state_dict(), path)
@@ -259,6 +262,10 @@ if __name__ == '__main__':
     parser.add_argument('--logging_steps', type=int,
         default=100,
         help='logging steps'
+    )
+    parser.add_argument('--save_steps', type=int,
+        default=1000,
+        help='save steps'
     )
 
     args = parser.parse_args()
