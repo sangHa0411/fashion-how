@@ -6,14 +6,14 @@ import pandas as pd
 import multiprocessing
 import parmap
 from skimage import io, transform, color
-from tqdm import tqdm
 
 class Loader :
 
-    def __init__(self, info_path, dir_path, img_size) :
+    def __init__(self, info_path, dir_path, img_size, label_smoothing_fator) :
         self._info_path = info_path
         self._dir_path = dir_path
         self._img_size = img_size
+        self._label_smoohting_factor = label_smoothing_fator
         self._df = pd.read_csv(info_path)
 
     def get_data(self, i) :
@@ -54,13 +54,22 @@ class Loader :
         img_ = transform.resize(img_, (new_h, new_w), mode='constant')
 
         daily = np.zeros(daily_size)
-        daily[row["Daily"]] = 1.0
-
         gender = np.zeros(gender_size)
-        gender[row["Gender"]] = 1.0
-
         emb = np.zeros(emb_size)
-        emb[row["Embellishment"]] = 1.0
+
+        if self._label_smoohting_factor == 0.0 :
+            daily[row["Daily"]] = 1.0
+            gender[row["Gender"]] = 1.0
+            emb[row["Embellishment"]] = 1.0
+        else :
+            daily[row["Daily"]] = 1.0 - self._label_smoohting_factor
+            daily += self._label_smoohting_factor / daily_size
+    
+            gender[row["Gender"]] = 1.0 - self._label_smoohting_factor
+            gender += self._label_smoohting_factor / gender_size
+
+            emb[row["Embellishment"]] = 1.0 - self._label_smoohting_factor
+            emb += self._label_smoohting_factor / emb_size
 
         data = {"image" : img_, "daily" : daily, "gender" : gender, "embellishment" : emb}
         return data

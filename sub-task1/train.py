@@ -25,7 +25,7 @@ def train(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # -- Loading Data
-    loader = Loader(args.info_path, args.image_dir, args.img_size)
+    loader = Loader(args.info_path, args.image_dir, args.img_size, args.label_smoohting_factor)
     dataset = loader.get_dataset()
     print("The number of dataset : %d" %len(dataset))
     random.shuffle(dataset)
@@ -38,14 +38,18 @@ def train(args):
         train_dataset = dataset
 
     # -- Data Augmentation 
+    print("\nAugment dataset using cutmix")
     augmentation = CutMix(args.num_aug)
     train_dataset = augmentation(train_dataset)
+    print("The number of dataset: %d" %len(train_dataset))
 
     # -- Preprocess Data
+    print("\nPreprocessing Dataset")
     preprocessor = Preprocessor(args.img_size)
     train_dataset = preprocessor(train_dataset)
     if args.do_eval :
         eval_dataset = preprocessor(eval_dataset)
+        
 
     print("\nThe number of train dataset : %d" %len(train_dataset))
     if args.do_eval :
@@ -181,8 +185,9 @@ def train(args):
                     print(info) 
                     model.train()
 
-            path = os.path.join(args.save_path, f"model{args.num_model}", f"checkpoint-{step}.pt")
-            torch.save(model.state_dict(), path)
+            if args.do_eval == False :
+                path = os.path.join(args.save_path, f"model{args.num_model}", f"checkpoint-{step}.pt")
+                torch.save(model.state_dict(), path)
 
     wandb.finish()
 
@@ -219,6 +224,10 @@ if __name__ == '__main__':
     parser.add_argument('--hidden_size', type=int, 
         default=2048, 
         help='hidden size of model'
+    )
+    parser.add_argument('--label_smoohting_factor', type=float, 
+        default=0.0, 
+        help='label smoothing factor'
     )
     parser.add_argument('--warmup_ratio', type=float, 
         default=0.05, 
