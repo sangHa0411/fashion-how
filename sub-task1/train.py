@@ -1,20 +1,14 @@
-import os
+import torch
 import random
 import argparse
 import numpy as np
-import torch
-import wandb
-from torch import optim
-from dotenv import load_dotenv
+from trainer import Trainer
 from torch.utils.data import DataLoader
 from utils.loader import Loader
 from utils.preprocessor import Preprocessor
 from utils.augmentation import CutMix
 from models.model import Model
-from models.loss import loss_fn, acc_fn
-from models.scheduler import LinearWarmupScheduler
 from models.dataset import ImageDataset
-from tqdm import tqdm
 
 def train(args):
 
@@ -82,114 +76,9 @@ def train(args):
     )
     model.to(device)
 
-    # -- Optimizer & Scheduler
-    # iteration = 2
-    total_steps = len(train_dataloader) * args.epochs
-    warmup_steps = int(args.warmup_ratio * total_steps)
-    optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-    # scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=iteration, eta_min=0)
-    scheduler = LinearWarmupScheduler(optimizer, total_steps, warmup_steps)
-
-    # -- Wandb
-    load_dotenv(dotenv_path="wandb.env")
-    WANDB_AUTH_KEY = os.getenv("WANDB_AUTH_KEY")
-    wandb.login(key=WANDB_AUTH_KEY)
-
-    name = f"EP:{args.epochs}_BS:{args.batch_size}_LR:{args.learning_rate}_WD:{args.weight_decay}"
-    wandb.init(
-        entity="sangha0411",
-        project="fashion-how",
-        group=f"sub-task1",
-        name=name
-    )
-
-    training_args = {"epochs": args.epochs, 
-        "batch_size": args.batch_size, 
-        "learning_rate": args.learning_rate, 
-        "weight_decay": args.weight_decay, 
-    }
-    wandb.config.update(training_args)
-
     # -- Training
-    print("\nTraining")
-    train_data_iterator = iter(train_dataloader)
-    for step in tqdm(range(total_steps)) :
-        try :
-            data = next(train_data_iterator)
-        except StopIteration :
-            train_data_iterator = iter(train_dataloader)
-            data = next(train_data_iterator)
-
-        optimizer.zero_grad()
-
-        img = data["image"].to(device)
-        daily = data["daily"].to(device)
-        gender = data["gender"].to(device)
-        emb = data["embellishment"].to(device)
-
-        daily_logit, gender_logit, emb_logit = model(img)
-
-        daily_loss = loss_fn(daily_logit, daily)
-        gender_loss = loss_fn(gender_logit, gender)
-        emb_loss = loss_fn(emb_logit, emb)
-
-        loss = daily_loss + gender_loss + emb_loss
-        loss.backward()
-
-        optimizer.step()
-        scheduler.step()
-
-        if step > 0 and step % args.logging_steps == 0 :
-            info = {"train/learning_rate" : scheduler.get_last_lr()[0], 
-                "train/daily_loss": daily_loss.item(), 
-                "train/gender_loss" : gender_loss.item(), 
-                "train/embellishment_loss": emb_loss.item(),
-                "train/step" : step,
-            }
-            wandb.log(info)
-            print(info)
-
-        if step > 0 and step % args.save_steps == 0 :
-            if args.do_eval :
-                print("\nEvaluating model at %d step" %step)
-                with torch.no_grad() :
-                    model.eval()
-                    daily_acc, gender_acc, emb_acc = 0.0, 0.0, 0.0
-
-                    for eval_data in tqdm(eval_dataloader) :
-
-                        img = eval_data["image"].to(device)
-                        daily = eval_data["daily"].to(device)
-                        gender = eval_data["gender"].to(device)
-                        emb = eval_data["embellishment"].to(device)
-
-                        daily_logit, gender_logit, emb_logit = model(img)
-
-                        daily_acc += acc_fn(daily_logit, daily)
-                        gender_acc += acc_fn(gender_logit, gender)
-                        emb_acc += acc_fn(emb_logit, emb)
-
-                    daily_acc /= len(eval_dataset)
-                    gender_acc /= len(eval_dataset)
-                    emb_acc /= len(eval_dataset)
-
-                    acc = (daily_acc + gender_acc + emb_acc) / 3
-                     
-                    info = {"eval/daily_acc": daily_acc, 
-                        "eval/gender_acc" : gender_acc, 
-                        "eval/embellishment_acc": emb_acc,
-                        "eval/acc" : acc,
-                        "eval/step" : step,
-                    }
-                    wandb.log(info)  
-                    print(info) 
-                    model.train()
-
-            if args.do_eval == False :
-                path = os.path.join(args.save_path, f"model{args.num_model}", f"checkpoint-{step}.pt")
-                torch.save(model.state_dict(), path)
-
-    wandb.finish()
+    trainer = Trainer(args, device, model, train_dataloader, eval_dataloader)
+    trainer.train()
 
 
 def seed_everything(seed):
@@ -272,6 +161,10 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int,
         default=5,
         help='epochs to training'
+    )
+    parser.add_argument('--max_steps', type=int, 
+        default=-1, 
+        help='max steps of training'
     )
     parser.add_argument('--num_workers', type=int,
         default=4,
