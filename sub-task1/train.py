@@ -1,13 +1,13 @@
 import torch
 import random
 import argparse
+import importlib
 import numpy as np
 from trainer import Trainer
 from torch.utils.data import DataLoader
 from utils.loader import Loader
 from utils.preprocessor import Preprocessor
 from utils.augmentation import CutMix
-from models.model import Model
 from models.dataset import ImageDataset
 
 def train(args):
@@ -69,7 +69,14 @@ def train(args):
 
     # -- model
     label_size = loader.get_label_size()
-    model = Model(args.hidden_size,
+
+    if args.loss == "arcface" :
+        model_name = "ArcFaceModel"
+    else :
+        model_name = "BaseModel"
+    model_lib = importlib.import_module("models.model")
+    model_class = getattr(model_lib, model_name)
+    model = model_class(args.hidden_size,
         label_size["daily"],
         label_size["gender"],
         label_size["embellishment"],

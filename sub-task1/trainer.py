@@ -70,10 +70,8 @@ class Trainer :
             if self._args.loss == "rdrop" :
                 batch_size = img.shape[0]
                 img = torch.cat([img, img], dim=0)
+                daily_logit, gender_logit, emb_logit = self._model(img)
 
-            daily_logit, gender_logit, emb_logit = self._model(img)
-
-            if self._args.loss == "rdrop" :
                 daily_logit1, daily_logit2 = daily_logit[:batch_size], daily_logit[batch_size:]
                 gender_logit1, gender_logit2 = gender_logit[:batch_size], gender_logit[batch_size:]
                 emb_logit1, emb_logit2 = emb_logit[:batch_size], emb_logit[batch_size:]
@@ -83,6 +81,11 @@ class Trainer :
                 emb_loss = self.rdrop_loss(emb_logit1, emb_logit2, emb)
     
             else :
+                if self._args.loss == "arcface" :
+                    daily_logit, gender_logit, emb_logit = self._model(img, (daily, gender, emb))
+                else :
+                    daily_logit, gender_logit, emb_logit = self._model(img)
+                
                 daily_loss = self.softmax_loss(daily_logit, daily)
                 gender_loss = self.softmax_loss(gender_logit, gender)
                 emb_loss = self.softmax_loss(emb_logit, emb)
@@ -101,14 +104,6 @@ class Trainer :
                 wandb.log(info)
                 print(info)
 
-            if step % self._args.gradient_accumulation_steps == 0 :
-                self._optimizer.step()
-                self._optimizer.zero_grad()
-                pbar.update(1)
-                p_step += 1
-
-            self._scheduler.step()
-
             if step > 0 and step % self._args.gradient_accumulation_steps == 0 \
                 and p_step % self._args.save_steps == 0 :
                 if self._args.do_eval :
@@ -117,6 +112,14 @@ class Trainer :
                 if self._args.do_eval == False :
                     path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{p_step}.pt")
                     torch.save(self._model.state_dict(), path)
+
+            if step % self._args.gradient_accumulation_steps == 0 :
+                self._optimizer.step()
+                self._optimizer.zero_grad()
+                pbar.update(1)
+                p_step += 1
+
+            self._scheduler.step()
 
         wandb.finish()
 
