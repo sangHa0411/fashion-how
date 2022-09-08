@@ -1,4 +1,5 @@
 import os
+from pickletools import optimize
 import wandb
 import torch
 import torch.nn as nn
@@ -40,7 +41,6 @@ class Trainer :
         training_args = {"epochs": self._args.epochs, 
             "total_steps" : self._total_steps,
             "warmup_steps" : self._warmup_steps,
-            "gradient_accumulation_steps" : self._args.gradient_accumulation_steps,
             "batch_size": self._args.batch_size, 
             "learning_rate": self._args.learning_rate, 
             "weight_decay": self._args.weight_decay, 
@@ -49,18 +49,16 @@ class Trainer :
 
         print("\nTraining")
         self._optimizer.zero_grad()
-
-        training_steps = int(self._total_steps / self._args.gradient_accumulation_steps)
-        pbar = tqdm(range(training_steps), desc="Training")
-        p_step = 0
         
         train_data_iterator = iter(self._train_dataloader)
-        for step in range(self._total_steps) :
+        for step in tqdm(range(self._total_steps), desc="Training") :
             try :
                 data = next(train_data_iterator)
             except StopIteration :
                 train_data_iterator = iter(self._train_dataloader)
                 data = next(train_data_iterator)
+
+            self._optimizer.zero_grad()
 
             img = data["image"].to(self._device)
             daily = data["daily"].to(self._device)
@@ -92,34 +90,26 @@ class Trainer :
 
             loss = daily_loss + gender_loss + emb_loss
             loss.backward()
+            self._optimizer.step()
+            self._scheduler.step()
 
-            if step > 0 and step % self._args.gradient_accumulation_steps == 0 \
-                and p_step % self._args.logging_steps == 0 :
+            if step > 0 and step % self._args.logging_steps == 0 :
                 info = {"train/learning_rate" : self._scheduler.get_last_lr()[0], 
                     "train/daily_loss": daily_loss.item(), 
                     "train/gender_loss" : gender_loss.item(), 
                     "train/embellishment_loss": emb_loss.item(),
-                    "train/step" : p_step,
+                    "train/step" : step,
                 }
                 wandb.log(info)
                 print(info)
 
-            if step > 0 and step % self._args.gradient_accumulation_steps == 0 \
-                and p_step % self._args.save_steps == 0 :
+            if step > 0 and step % self._args.save_steps == 0 :
                 if self._args.do_eval :
-                    self.evaluate(p_step)
+                    self.evaluate(step)
                 
                 if self._args.do_eval == False :
                     path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{p_step}.pt")
                     torch.save(self._model.state_dict(), path)
-
-            if step % self._args.gradient_accumulation_steps == 0 :
-                self._optimizer.step()
-                self._optimizer.zero_grad()
-                pbar.update(1)
-                p_step += 1
-
-            self._scheduler.step()
 
         wandb.finish()
 

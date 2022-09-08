@@ -179,10 +179,6 @@ if __name__ == '__main__':
         default=-1, 
         help='max steps of training'
     )
-    parser.add_argument('--gradient_accumulation_steps', type=int, 
-        default=1, 
-        help='gradient_accumulation_steps of training'
-    )
     parser.add_argument('--num_workers', type=int,
         default=4,
         help='the number of workers for data loader'
