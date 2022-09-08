@@ -64,6 +64,8 @@ def train(args):
             shuffle=False, 
             num_workers=args.num_workers
         )
+    else :
+        eval_dataloader = None
 
     # -- model
     label_size = loader.get_label_size()
@@ -101,6 +103,10 @@ if __name__ == '__main__':
     parser.add_argument('--do_eval', type=bool, 
         default=False, 
         help='evaluation flag'
+    )
+    parser.add_argument('--loss', type=str, 
+        default="softmax", 
+        help='loss function'
     )
     parser.add_argument('--num_model', type=int, 
         default=0, 
@@ -165,6 +171,10 @@ if __name__ == '__main__':
     parser.add_argument('--max_steps', type=int, 
         default=-1, 
         help='max steps of training'
+    )
+    parser.add_argument('--gradient_accumulation_steps', type=int, 
+        default=1, 
+        help='gradient_accumulation_steps of training'
     )
     parser.add_argument('--num_workers', type=int,
         default=4,
