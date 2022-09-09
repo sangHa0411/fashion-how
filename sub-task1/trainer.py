@@ -106,11 +106,13 @@ class Trainer :
                     self.evaluate(step)
                 
                 if self._args.do_eval == False :
-                    path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{p_step}.pt")
+                    path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{step}.pt")
                     torch.save(self._model.state_dict(), path)
 
+        self.evaluate(self._total_steps)
+        path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{self._total_steps}.pt")
+        torch.save(self._model.state_dict(), path)
         wandb.finish()
-
 
     def evaluate(self, step) :
         eval_size = len(self._eval_dataloader) * self._args.eval_batch_size

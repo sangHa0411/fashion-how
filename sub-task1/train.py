@@ -75,11 +75,13 @@ def train(args):
             model_name = "ResNetArcFaceModel"
         else :
             model_name = "ResNetModel"
-    elif args.backbone == "densent" :
+    elif args.backbone == "densenet" :
         if args.loss == "arcface" :
-            model_name = "ResNetArcFaceModel"
+            model_name = "DenseNetArcFaceModel"
         else :
             model_name = "DenseNetModel"
+    elif args.backbone == "vgg" :
+        model_name = "VGGModel"
     else :
         raise NotImplementedError("Not Implemented backbone")
 
