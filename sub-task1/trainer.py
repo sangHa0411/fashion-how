@@ -47,9 +47,7 @@ class Trainer :
         }
         wandb.config.update(training_args)
 
-        print("\nTraining")
-        self._optimizer.zero_grad()
-        
+        print("\nTraining")        
         train_data_iterator = iter(self._train_dataloader)
         for step in tqdm(range(self._total_steps), desc="Training") :
             try :

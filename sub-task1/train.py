@@ -19,13 +19,13 @@ def train(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # -- Loading Data
-    loader = Loader(args.info_path, args.image_dir, args.img_size, args.label_smoohting_factor)
+    loader = Loader(args.info_path, args.image_dir, args.img_size)
     dataset = loader.get_dataset()
     print("The number of dataset : %d" %len(dataset))
     random.shuffle(dataset)
 
     if args.do_eval :
-        size = int(len(dataset) / 5)
+        size = int(len(dataset) / 4)
         train_dataset = dataset[size:]
         eval_dataset = dataset[:size]
     else :
@@ -70,10 +70,20 @@ def train(args):
     # -- model
     label_size = loader.get_label_size()
 
-    if args.loss == "arcface" :
-        model_name = "ArcFaceModel"
+    if args.backbone == "resnet" :
+        if args.loss == "arcface" :
+            model_name = "ResNetArcFaceModel"
+        else :
+            model_name = "ResNetModel"
+    elif args.backbone == "densent" :
+        if args.loss == "arcface" :
+            model_name = "ResNetArcFaceModel"
+        else :
+            model_name = "DenseNetModel"
     else :
-        model_name = "BaseModel"
+        raise NotImplementedError("Not Implemented backbone")
+
+
     model_lib = importlib.import_module("models.model")
     model_class = getattr(model_lib, model_name)
     model = model_class(args.hidden_size,
@@ -127,9 +137,9 @@ if __name__ == '__main__':
         default=2048, 
         help='hidden size of model'
     )
-    parser.add_argument('--label_smoohting_factor', type=float, 
-        default=0.0, 
-        help='label smoothing factor'
+    parser.add_argument('--backbone', type=str, 
+        default="resnet", 
+        help='image classification model backbone'
     )
     parser.add_argument('--warmup_ratio', type=float, 
         default=0.05, 

@@ -9,11 +9,10 @@ from skimage import io, transform, color
 
 class Loader :
 
-    def __init__(self, info_path, dir_path, img_size, label_smoothing_fator) :
+    def __init__(self, info_path, dir_path, img_size) :
         self._info_path = info_path
         self._dir_path = dir_path
         self._img_size = img_size
-        self._label_smoohting_factor = label_smoothing_fator
         self._df = pd.read_csv(info_path)
 
     def get_data(self, i) :
@@ -57,20 +56,9 @@ class Loader :
         gender = np.zeros(gender_size)
         emb = np.zeros(emb_size)
 
-        if self._label_smoohting_factor == 0.0 :
-            daily[row["Daily"]] = 1.0
-            gender[row["Gender"]] = 1.0
-            emb[row["Embellishment"]] = 1.0
-        else :
-            daily[row["Daily"]] = 1.0 - self._label_smoohting_factor
-            daily += self._label_smoohting_factor / daily_size
-    
-            gender[row["Gender"]] = 1.0 - self._label_smoohting_factor
-            gender += self._label_smoohting_factor / gender_size
-
-            emb[row["Embellishment"]] = 1.0 - self._label_smoohting_factor
-            emb += self._label_smoohting_factor / emb_size
-
+        daily[row["Daily"]] = 1.0
+        gender[row["Gender"]] = 1.0
+        emb[row["Embellishment"]] = 1.0
         data = {"image" : img_, "daily" : daily, "gender" : gender, "embellishment" : emb}
         return data
 
