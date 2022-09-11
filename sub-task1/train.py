@@ -70,22 +70,7 @@ def train(args):
     # -- model
     label_size = loader.get_label_size()
 
-    if args.backbone == "resnet" :
-        if args.loss == "arcface" :
-            model_name = "ResNetArcFaceModel"
-        else :
-            model_name = "ResNetModel"
-    elif args.backbone == "densenet" :
-        if args.loss == "arcface" :
-            model_name = "DenseNetArcFaceModel"
-        else :
-            model_name = "DenseNetModel"
-    elif args.backbone == "vgg" :
-        model_name = "VGGModel"
-    else :
-        raise NotImplementedError("Not Implemented backbone")
-
-
+    model_name = args.backbone 
     model_lib = importlib.import_module("models.model")
     model_class = getattr(model_lib, model_name)
     model = model_class(args.hidden_size,
@@ -133,7 +118,7 @@ if __name__ == '__main__':
     )
     parser.add_argument('--img_size', type=int, 
         default=224, 
-        help='image size'
+        help='orignal image size'
     )
     parser.add_argument('--hidden_size', type=int, 
         default=2048, 

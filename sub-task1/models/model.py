@@ -2,14 +2,11 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision import models
 from torchvision.models.resnet import resnet152
 from torchvision.models.densenet import densenet161
 
 
-
 class ArcMarginProduct(nn.Module):
-
     def __init__(self, in_features, out_features, s=30.0, m=0.50):
         super().__init__()
         self.in_features = in_features
@@ -36,6 +33,7 @@ class ArcMarginProduct(nn.Module):
         output *= self.s
         return output
 
+
 class ResNetArcFaceModel(nn.Module):
     def __init__(self, 
         hidden_size,
@@ -48,9 +46,9 @@ class ResNetArcFaceModel(nn.Module):
         super(ResNetArcFaceModel, self).__init__()
 
         if pretrained == True :
-            self._backbone = resnet152(pretrained=True, progress=True)
+            self._backbone = densenet161(pretrained=True, progress=True)
         else :
-            self._backbone = resnet152(pretrained=False, progress=False)
+            self._backbone = densenet161(pretrained=False, progress=False)
 
         self._feature_size = 1000
         self._hidden_size = hidden_size
@@ -80,58 +78,6 @@ class ResNetArcFaceModel(nn.Module):
             o3 = self._arc3(h)
 
         return o1, o2, o3
-
-
-class ResNetModel(nn.Module):
-    def __init__(self, 
-        hidden_size,
-        class1_size, 
-        class2_size, 
-        class3_size,
-        dropout_prob,
-        pretrained=True
-    ):
-        super(ResNetModel, self).__init__()
-
-        if pretrained == True :
-            self._backbone = resnet152(pretrained=True, progress=True)
-        else :
-            self._backbone = resnet152(pretrained=False, progress=False)
-
-        self._feature_size = 1000
-        self._hidden_size = hidden_size
-        self._dropout_prob = dropout_prob
-        self._class1_size = class1_size
-        self._class2_size = class2_size
-        self._class3_size = class3_size
-
-        self._drop = nn.Dropout(self._dropout_prob)
-        self._classifier1 = nn.Sequential(
-            nn.Linear(self._feature_size, self._hidden_size),
-            nn.ReLU(),
-            nn.Linear(self._hidden_size, self._class1_size)
-        )
-
-        self._classifier2 = nn.Sequential(
-            nn.Linear(self._feature_size, self._hidden_size),
-            nn.ReLU(),
-            nn.Linear(self._hidden_size, self._class2_size)
-        )
-
-        self._classifier3 = nn.Sequential(
-            nn.Linear(self._feature_size, self._hidden_size),
-            nn.ReLU(),
-            nn.Linear(self._hidden_size, self._class3_size)
-        )
-
-    def forward(self, x):
-        h = self._backbone(x)
-        h = self._drop(h)
-
-        y1 = self._classifier1(h)
-        y2 = self._classifier2(h)
-        y3 = self._classifier3(h)
-        return y1, y2, y3
 
 
 class DenseNetArcFaceModel(nn.Module):
@@ -146,9 +92,9 @@ class DenseNetArcFaceModel(nn.Module):
         super(DenseNetArcFaceModel, self).__init__()
 
         if pretrained == True :
-            self._backbone = densenet161(pretrained=True, progress=True)
+            self._backbone = resnet152(pretrained=True, progress=True)
         else :
-            self._backbone = densenet161(pretrained=False, progress=False)
+            self._backbone = resnet152(pretrained=False, progress=False)
 
         self._feature_size = 1000
         self._hidden_size = hidden_size
@@ -179,7 +125,7 @@ class DenseNetArcFaceModel(nn.Module):
 
         return o1, o2, o3
 
-class DenseNetModel(nn.Module):
+class ResNetBaseModel(nn.Module):
     def __init__(self, 
         hidden_size,
         class1_size, 
@@ -188,12 +134,50 @@ class DenseNetModel(nn.Module):
         dropout_prob,
         pretrained=True
     ):
-        super(DenseNetModel, self).__init__()
+        super(ResNetBaseModel, self).__init__()
 
         if pretrained == True :
-            self._backbone = densenet161(pretrained=True, progress=True)
+            self._backbone = resnet152(pretrained=True, progress=True)
         else :
-            self._backbone = densenet161(pretrained=False, progress=False)
+            self._backbone = resnet152(pretrained=False, progress=False)
+
+        self._feature_size = 1000
+        self._hidden_size = hidden_size
+        self._dropout_prob = dropout_prob
+        self._class1_size = class1_size
+        self._class2_size = class2_size
+        self._class3_size = class3_size
+
+        self._drop = nn.Dropout(self._dropout_prob)
+        self._classifier1 = nn.Linear(self._feature_size, self._class1_size)
+        self._classifier2 = nn.Linear(self._feature_size, self._class2_size)
+        self._classifier3 = nn.Linear(self._feature_size, self._class3_size)
+
+    def forward(self, x):
+        h = self._backbone(x)
+        h = self._drop(h)
+
+        y1 = self._classifier1(h)
+        y2 = self._classifier2(h)
+        y3 = self._classifier3(h)
+        return y1, y2, y3
+
+
+class ResNetFeedForwardModel(nn.Module):
+    def __init__(self, 
+        hidden_size,
+        class1_size, 
+        class2_size, 
+        class3_size,
+        dropout_prob,
+        pretrained=True
+    ):
+        super(ResNetFeedForwardModel, self).__init__()
+
+        if pretrained == True :
+            self._backbone = resnet152(pretrained=True, progress=True)
+        else :
+            self._backbone = resnet152(pretrained=False, progress=False)
 
         self._feature_size = 1000
         self._hidden_size = hidden_size
@@ -230,54 +214,3 @@ class DenseNetModel(nn.Module):
         y3 = self._classifier3(h)
         return y1, y2, y3
 
-
-class VGGModel(nn.Module):
-    def __init__(self, 
-        hidden_size,
-        class1_size, 
-        class2_size, 
-        class3_size,
-        dropout_prob,
-        pretrained=True
-    ):
-        super(VGGModel, self).__init__()
-
-        if pretrained == True :
-            self._backbone = models.vgg16(pretrained=True)
-        else :
-            self._backbone = models.vgg16(pretrained=False)
-
-        self._feature_size = 1000
-        self._hidden_size = hidden_size
-        self._dropout_prob = dropout_prob
-        self._class1_size = class1_size
-        self._class2_size = class2_size
-        self._class3_size = class3_size
-
-        self._drop = nn.Dropout(self._dropout_prob)
-        self._classifier1 = nn.Sequential(
-            nn.Linear(self._feature_size, self._hidden_size),
-            nn.ReLU(),
-            nn.Linear(self._hidden_size, self._class1_size)
-        )
-
-        self._classifier2 = nn.Sequential(
-            nn.Linear(self._feature_size, self._hidden_size),
-            nn.ReLU(),
-            nn.Linear(self._hidden_size, self._class2_size)
-        )
-
-        self._classifier3 = nn.Sequential(
-            nn.Linear(self._feature_size, self._hidden_size),
-            nn.ReLU(),
-            nn.Linear(self._hidden_size, self._class3_size)
-        )
-
-    def forward(self, x):
-        h = self._backbone(x)
-        h = self._drop(h)
-
-        y1 = self._classifier1(h)
-        y2 = self._classifier2(h)
-        y3 = self._classifier3(h)
-        return y1, y2, y3
