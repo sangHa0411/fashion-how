@@ -77,10 +77,7 @@ class Trainer :
                 emb_loss = self.rdrop_loss(emb_logit1, emb_logit2, emb)
     
             else :
-                if self._args.loss == "arcface" :
-                    daily_logit, gender_logit, emb_logit = self._model(img, (daily, gender, emb))
-                else :
-                    daily_logit, gender_logit, emb_logit = self._model(img)
+                daily_logit, gender_logit, emb_logit = self._model(img)
                 
                 daily_loss = self.softmax_loss(daily_logit, daily)
                 gender_loss = self.softmax_loss(gender_logit, gender)
@@ -178,5 +175,5 @@ class Trainer :
         kl_loss1 = F.kl_div(F.log_softmax(logit1, dim=-1), F.softmax(logit2, dim=-1), reduction='batchmean')
         kl_loss2 = F.kl_div(F.log_softmax(logit2, dim=-1), F.softmax(logit1, dim=-1), reduction='batchmean')
 
-        loss = (ce_loss1 + ce_loss2) / 2 + 0.1 * (kl_loss1 + kl_loss2) / 2
+        loss = (ce_loss1 + ce_loss2) + 0.1 * (kl_loss1 + kl_loss2)
         return loss
