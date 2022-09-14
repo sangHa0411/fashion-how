@@ -1,6 +1,5 @@
 
 import os
-import copy
 import numpy as np
 import pandas as pd
 import multiprocessing
@@ -13,7 +12,10 @@ class Loader :
         self._info_path = info_path
         self._dir_path = dir_path
         self._img_size = img_size
-        self._df = pd.read_csv(info_path)
+        
+        df = pd.read_csv(info_path)
+        df = df.drop_duplicates(subset=['image_name'])
+        self._df = df
 
     def get_data(self, i) :
 
@@ -33,24 +35,8 @@ class Loader :
         x_max = int(row["BBox_xmax"])
         y_max = int(row["BBox_ymax"])
 
-        height = y_max - y_min
-        width = x_max - x_min
-
-        img_ = copy.deepcopy(img)
-        img_ = img_[y_min:y_max,x_min:x_max]
-
-        if height != width :
-            if height > width :
-                new_h = self._img_size
-                new_w = int(width * self._img_size / height)
-            else :
-                new_w = self._img_size
-                new_h = int(height * self._img_size / width)
-        else :
-            new_h = self._img_size 
-            new_w = self._img_size
-        
-        img_ = transform.resize(img_, (new_h, new_w), mode='constant')
+        img_ = img[y_min:y_max,x_min:x_max]
+        img_ = transform.resize(img_, (self._img_size , self._img_size), mode='constant')
 
         daily = np.zeros(daily_size)
         gender = np.zeros(gender_size)
@@ -69,6 +55,7 @@ class Loader :
             pm_pbar=True, 
             pm_processes=num_cores
         )
+
         return dataset
 
     def get_label_size(self) :

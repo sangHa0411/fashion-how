@@ -23,20 +23,18 @@ def train(args):
     print("The number of dataset : %d" %len(dataset))
     random.shuffle(dataset)
 
-    if args.do_eval :
-        size = int(len(dataset) / 4)
-        train_dataset = dataset[size:]
-        eval_dataset = dataset[:size]
-    else :
-        train_dataset = dataset
+    FOLD_SIZE = args.fold_size
+    i = args.num_model
+    size = int(len(dataset) / FOLD_SIZE)
+    eval_dataset = dataset[i*size:(i+1)*size]
+    train_dataset = dataset[:i*size] + dataset[(i+1)*size:]
 
     # -- Data Augmentation 
     print("\nAugment dataset using cutmix")
     augmentation = CutMix(args.num_aug)
     train_dataset = augmentation(train_dataset)
     print("\nThe number of train dataset : %d" %len(train_dataset))
-    if args.do_eval :
-        print("The number of eval dataset : %d\n" %len(eval_dataset))
+    print("The number of eval dataset : %d\n" %len(eval_dataset))
 
     # -- Torch Dataset & Dataloader
     train_dataset = ImageDataset(train_dataset)
@@ -46,15 +44,12 @@ def train(args):
         num_workers=args.num_workers
     )
 
-    if args.do_eval :
-        eval_dataset = ImageDataset(eval_dataset)
-        eval_dataloader = DataLoader(eval_dataset, 
-            batch_size=args.eval_batch_size, 
-            shuffle=False, 
-            num_workers=args.num_workers
-        )
-    else :
-        eval_dataloader = None
+    eval_dataset = ImageDataset(eval_dataset)
+    eval_dataloader = DataLoader(eval_dataset, 
+        batch_size=args.eval_batch_size, 
+        shuffle=False, 
+        num_workers=args.num_workers
+    )
 
     # -- model
     label_size = loader.get_label_size()
@@ -72,6 +67,7 @@ def train(args):
     model.to(device)
 
     # -- Training
+    args.do_eval = True
     trainer = Trainer(args, device, model, train_dataloader, eval_dataloader)
     trainer.train()
 
@@ -104,6 +100,10 @@ if __name__ == '__main__':
     parser.add_argument('--num_model', type=int, 
         default=0, 
         help='number of model'
+    )
+    parser.add_argument('--fold_size', type=int, 
+        default=5, 
+        help='the number of fold'
     )
     parser.add_argument('--img_size', type=int, 
         default=224, 

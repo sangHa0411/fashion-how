@@ -21,7 +21,7 @@ class Trainer :
 
         self._total_steps = len(train_dataloader) * args.epochs if args.max_steps == -1 else args.max_steps
         self._warmup_steps = int(args.warmup_ratio * self._total_steps)
-        self._optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+        self._optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
         self._scheduler = LinearWarmupScheduler(self._optimizer, self._total_steps, self._warmup_steps)
 
     def train(self,) :
@@ -102,16 +102,14 @@ class Trainer :
                 if self._args.do_eval :
                     self.evaluate(step)
                 
-                if self._args.do_eval == False :
-                    path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{step}.pt")
-                    torch.save(self._model.state_dict(), path)
+                # path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{step}.pt")
+                # torch.save(self._model.state_dict(), path)
 
         if self._args.do_eval :
             self.evaluate(self._total_steps)
 
-        if self._args.do_eval == False :
-            path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{self._total_steps}.pt")
-            torch.save(self._model.state_dict(), path)
+        # path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{self._total_steps}.pt")
+        # torch.save(self._model.state_dict(), path)
         wandb.finish()
 
     def evaluate(self, step) :
@@ -175,5 +173,5 @@ class Trainer :
         kl_loss1 = F.kl_div(F.log_softmax(logit1, dim=-1), F.softmax(logit2, dim=-1), reduction='batchmean')
         kl_loss2 = F.kl_div(F.log_softmax(logit2, dim=-1), F.softmax(logit1, dim=-1), reduction='batchmean')
 
-        loss = (ce_loss1 + ce_loss2) + 0.1 * (kl_loss1 + kl_loss2)
+        loss = (ce_loss1 + ce_loss2) / 2 + 0.1 * (kl_loss1 + kl_loss2)
         return loss

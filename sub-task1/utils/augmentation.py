@@ -29,9 +29,7 @@ class CutMix :
                 rand_id_list.append(rand_id)
 
                 # target
-                tar_img = copy.deepcopy(dataset[rand_id]["image"])
-                tar_img = transform.resize(tar_img, (org_h, org_w), mode='constant')
-                
+                tar_img = dataset[rand_id]["image"]
                 tar_daily = dataset[rand_id]["daily"]
                 tar_gender = dataset[rand_id]["gender"]
                 tar_emb = dataset[rand_id]["embellishment"]
