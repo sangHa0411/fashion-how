@@ -133,6 +133,4 @@ def inference() :
     )
 
 if __name__ == '__main__':
-
-    os.system('cd /home/work/model')
     inference()

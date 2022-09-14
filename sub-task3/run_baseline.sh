@@ -2,6 +2,7 @@
 python train.py --in_file_trn_dialog ./data/task1.ddata.wst.txt \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --epochs 10 \
+    --seed 95 \
     --learning_rate 2e-5 \
     --dropout_prob 0.1 \
     --batch_size 16 \
@@ -30,6 +31,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
 python train.py --in_file_trn_dialog ./data/task2.ddata.wst.txt \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --epochs 10 \
+    --seed 95 \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
     --learning_rate 1e-5 \
@@ -73,6 +75,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task2.wst.dev \
 python train.py --in_file_trn_dialog ./data/task3.ddata.wst.txt \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --epochs 10 \
+    --seed 95 \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
     --learning_rate 5e-6 \
@@ -129,6 +132,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
 python train.py --in_file_trn_dialog ./data/task4.ddata.wst.txt \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --epochs 10 \
+    --seed 95 \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
     --learning_rate 3e-6 \
@@ -185,6 +189,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
 python train.py --in_file_trn_dialog ./data/task5.ddata.wst.txt \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --epochs 10 \
+    --seed 95 \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
     --learning_rate 2e-6 \
@@ -241,6 +246,7 @@ python evaluate.py --in_file_tst_dialog ./data/cl_eval_task3.wst.dev \
 python train.py --in_file_trn_dialog ./data/task6.ddata.wst.txt \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --epochs 10 \
+    --seed 95 \
     --model_path gAIa_CL_model \
     --model_file gAIa-final.pt \
     --learning_rate 1e-6 \
