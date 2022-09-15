@@ -137,12 +137,8 @@ def train(args) :
             info = {"train/loss": loss.item(), "train/acc": acc, "train/learning_rate" : lr, "train/step" : step}
             print(info)
             acc = 0.0
-
-        if step > 0 and step % args.save_steps == 0 :
-            path = os.path.join(args.model_path, f"gAIa-final-{step}.pt")
-            torch.save(model.state_dict, path)
             
-    path = os.path.join(args.model_path, f"gAIa-final.pt")
+    path = os.path.join(args.model_path, f"gAIa-final-{args.seed}.pt")
     print("Saving Model : %s" %path)
     torch.save(model.state_dict(), path)
 
@@ -248,7 +244,7 @@ if __name__ == '__main__':
         help='size of text feature'
     )
     parser.add_argument('--eval_node', type=str,
-        default='[6000,6000,6000,200][2000,2000]',
+        default='[1024,2048,2048]',
         help='nodes of evaluation network'
     )
     parser.add_argument('--augmentation_size', type=int,
