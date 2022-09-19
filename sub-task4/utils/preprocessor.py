@@ -5,7 +5,12 @@ import numpy as np
 from tqdm import tqdm
 
 class DiagPreprocessor :
-
+    """
+    추출된 대화와 cordi를 전처리해서 모든 데이터가 통일성을 가지도록 하는 클래스
+    해당 대화와 추출된 codri를 에서 cordi를 늦게 추천한 순서대로 3개를 선정하도록 합니다.
+    여기서 몇몇 경우에서는 기존에 추출된 cordi가 3개가 안되는 경우도 있는데 
+    이는 기존의 cordi에서 두 개를 임의로 선정해서 (dummy label 제외) 유사한 아이템으로 바꿈으로서 cordi를 3개로 맞추어줍니다.
+    """
     def __init__(self, num_rank, num_cordi) :
         self.num_rank = num_rank
         self.num_cordi = num_cordi

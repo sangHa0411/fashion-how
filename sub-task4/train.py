@@ -163,11 +163,11 @@ if __name__ == '__main__':
         help='random seed'
     )
     parser.add_argument('--in_file_trn_dialog', type=str,
-        default='../data/ddata.wst.txt.2021.6.9',
+        default='./data/ddata.wst.txt.2021.6.9',
         help='training dialog DB'
     )
     parser.add_argument('--in_file_fashion', type=str,
-        default='../data/mdata.txt.2021.10.18',
+        default='./data/mdata.txt.2021.10.18',
         help='fashion item metadata'
     )
     parser.add_argument('--img_feat_dir', type=str,

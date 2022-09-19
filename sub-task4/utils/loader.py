@@ -1,8 +1,8 @@
 import copy
+import random
 import collections
 import pandas as pd 
 import numpy as np
-from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
 
 def position_of_fashion_item(item):
@@ -16,11 +16,13 @@ def position_of_fashion_item(item):
     elif prefix=='SE':
         idx = 3
     else:
-        idx = 4
+        raise ValueError('{} do not exists.'.format(item))
     return idx
 
 class MetaLoader :
-
+    """
+    mdata.wst.txt.2021.10.18 파일을 불러와서 분석 및 전처리하는 클래스
+    """
     def __init__(self, path, swer) :
         self.path = path
         self.swer = swer
@@ -31,12 +33,15 @@ class MetaLoader :
         return img2id, id2img, img_similarity
 
     def _load(self) :
+        """
+        각각의 옷에 대한 설명을 하나로 모아서 각 옷을 key로 하고 해당 key에 대한 value를 문장 리스트를 구성해서 저장을 합니다.
+        """
         with open(self.path, encoding="euc-kr", mode="r") as f :
             mdata = f.readlines()
 
         mdataset = []
         prev_name = ""
-        for i in tqdm(range(len(mdata))) :
+        for i in range(len(mdata)) :
             row = mdata[i].split("\t")
             row = [r.strip() for r in row]
             if row[0] != prev_name :
@@ -50,6 +55,12 @@ class MetaLoader :
         return mdataset
 
     def _get_mapping(self, mdataset) :
+        """
+        해당 옷에 카테고리별로 분류합니다. : img_category
+        각 분류에 따라서 그 분류에 해당되는 옷들에 대해서 represenation vector를 구합니다. : img_vectors
+        해당 옷에 대해서 그 카테고리에 있는 옷을 기준대로 representation vector들 간의 코사인 유사도를 구해서 그 결과를 저장합니다. : img_similarity
+        카테고리의 갯수가 4개이고 해당 4개를 각각의 img 에서 id로, id에서 img로 mapping하는 dict 타입을 생성합니다. : img2id, id2img
+        """
         img2description = {m["name"] : m["fashion_description"] for m in mdataset}
         img_list = list(img2description.keys())
         img_category = collections.defaultdict(list)
@@ -101,7 +112,9 @@ class MetaLoader :
 
 
 class DialogueTrainLoader :
-
+    """
+    task1.ddata.wst.txt 와 같이 훈련 데이터를 불러와서 분석하고 전처리하는 클래스
+    """
     def __init__(self, path,) :
         self.path = path
 
@@ -110,13 +123,16 @@ class DialogueTrainLoader :
         stories = self._split(df)
 
         ddataset = []
-        for i,d in enumerate(tqdm(stories)):
+        for i,d in enumerate(stories):
             d, c, r = self._extract(d)    
             data = {"diag" : d, "cordi" : c, "reward" : r}
             ddataset.append(data)
         return ddataset
 
     def _load(self, ) :
+        """
+        데이터를 불러와서 id, utterance, description, tag 등으로 구분해서 dataframe 형식으로 저장합니다.
+        """
         with open(self.path, encoding="euc-kr", mode="r") as f :
             ddata = f.readlines()
 
@@ -142,6 +158,9 @@ class DialogueTrainLoader :
         return df
 
     def _split(self, df) :
+        """
+        tag를 기반으로 해서 dataframe으로 일괄적으로 저장되어 있는 데이터를 대화 기준으로 구분합니다.
+        """
         start_ids = []
         for i in range(len(df)) :
             tag = df.iloc[i]["tag"]
@@ -159,6 +178,10 @@ class DialogueTrainLoader :
         return stories
 
     def _add_dummy(self, item) :
+        """
+        코디가 제안한 조합 중에서는 몇몇 경우에서는 4가지가 아닌 2가지, 3가지가 제안되는 경우가 있는데 
+        통일성을 위해서 해당 카테고리에 dummy label을 추가힙니다.
+        """
         if 0 not in item :
             item[0] = "NONE-OUTER"
         
@@ -173,6 +196,12 @@ class DialogueTrainLoader :
         return item
 
     def _extract(self, stories) :
+        """
+        해당 대화에서 대화, tag 등을 구분해서 추천된 cordi 등을 가져옵니다. 
+        이 함수를 통해서는 코디가 제안한 횟수 만큼 cordi가 생성이 됩니다.
+        각 코디별로 outer, top, bottom, shoes 순으로 정렬을 하게 되고 계 중에 없는 옷이 있다면 dummy label로 채웁니다.
+        추후에 preprocessor.py에 있는 DiagPreprocessor을 통해서 위에서 생성된 코디 중에서 최종 3가지를 선정하게 됩니다.
+        """
         descriptions = [stories.iloc[i]["description"] for i in range(len(stories)) 
             if stories.iloc[i]["utterance"] != "<AC>"
         ]
@@ -208,19 +237,26 @@ class DialogueTrainLoader :
         return descriptions, coordi, reward
 
 class DialogueTestLoader :
-
-    def __init__(self, path) :
+    """
+    cl_eval_task1.wst.dev 와 같은 dev 혹은 test 데이터를 불러와서 분석하고 전처리하기 위한 클래스
+    """
+    def __init__(self, path, eval_flag) :
         self.path = path
+        self.eval_flag = eval_flag
 
     def get_dataset(self, ) :
         ddata = self._load()
         stories = self._split(ddata)
 
         dataset = []
-        for i in tqdm(range(len(stories))):
+        for i in range(len(stories)):
             story = stories[i]
-            d, c = self._extract(story)
-            data = {"diag" : d, "cordi" : c}
+            if self.eval_flag :
+                d, c, r = self._extract(story)
+                data = {"diag" : d, "cordi" : c, "reward" : r}
+            else :
+                d, c = self._extract(story)
+                data = {"diag" : d, "cordi" : c}
             dataset.append(data)
         return dataset
 
@@ -230,6 +266,9 @@ class DialogueTestLoader :
         return ddata
 
     def _split(self, dataset) :
+        """
+        해당 데이터를 ;를 기준으로 분류해서 대화로 나누는 함수입니다.
+        """
         start_ids = []
         for i, r in enumerate(dataset) :
             if ";" in r :
@@ -244,6 +283,10 @@ class DialogueTestLoader :
         return stories
 
     def _extract(self, story) :
+        """
+        분류된 대화 내에서 코디 부분과 대화 부분을 구분하는 함수입니다.
+        """
+        num = int(story[0][2:-1])
         desc = [row.split("\t")[1].strip() 
             for row in story[1:-3]
         ]
@@ -251,9 +294,18 @@ class DialogueTestLoader :
             for row in story[-3:]
         ]
         cordi = self._preprocess(cordi)
-        return desc, cordi
+
+        if self.eval_flag :
+            cordi, ranks = self._shuffle(cordi)
+            return desc, cordi, ranks
+        else :
+            return desc, cordi
 
     def _preprocess(self, cordi) :
+        """
+        추천된 코디의 순서를 outer, top, bottom, shoes 순서대로 정렬하기 위한 함수입니다.
+        그리고 그 과정 중에서 없는 것이 있다면 dummy label로 채우게 됩니다.
+        """
         cordi = [
             [item.split("_")[-1] for item in c]
             for c in cordi
@@ -264,6 +316,17 @@ class DialogueTestLoader :
         ]
         cordi = [self._add_dummy(c) for c in cordi]
         return cordi
+
+    def _shuffle(self, cordi) :
+        """
+        평가 데이터의 label은 항시 첫번째 추천 > 두 번째 추천 > 세 번째 추천이 되는데 
+        이를 섞어주고 그에 맞게 label로 바꾸도록 했습니다.
+        """
+        ranks = [0, 1, 2]
+        random.shuffle(ranks)
+
+        cordi = [cordi[r] for r in ranks]
+        return cordi, ranks
 
     def _add_dummy(self, item) :
         if 0 not in item :

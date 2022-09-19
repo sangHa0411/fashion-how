@@ -42,7 +42,7 @@ class PolicyNet(nn.Module):
         self._query = nn.Linear(self._key_size, self._embed_size)
 
         mlp_eval_list = [nn.Linear(self._embed_size, self._d_model_hid)]
-        hid_tf_layer = nn.TransformerEncoderLayer(d_model=self._d_model_hid, nhead=self._nhead_hid, batch_first=True)
+        hid_tf_layer = nn.TransformerEncoderLayer(d_model=self._d_model_hid, nhead=self._nhead_hid)
         hid_tf_encoder = nn.TransformerEncoder(hid_tf_layer, num_layers=self._num_hid_layer)
         mlp_eval_list.append(hid_tf_encoder)
         self._mlp_eval = nn.Sequential(*mlp_eval_list)

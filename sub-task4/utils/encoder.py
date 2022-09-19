@@ -3,7 +3,10 @@ import numpy as np
 from tqdm import tqdm
 
 class Encoder :
-
+    """
+    대화를 sstm_v4p49_np_n36134_d128.dat 파일을 기반으로 한 tokenizer를 통해서 벡터로 변환을 하고
+    코디 추천은 인덱스 형태로 변환하면서 딕셔너리에서 numpy array로 변환됩니다.
+    """
     def __init__(self, swer, num_cordi, mem_size) :
         self.swer = swer
         self.num_cordi = num_cordi
