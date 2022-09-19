@@ -1,19 +1,22 @@
+
 import os
 import torch
+import importlib
 import numpy as np
 import pandas as pd
+import torch.nn.functional as F
+from tqdm import tqdm
 from torch.utils.data import DataLoader
 from utils.loader import Loader
 from utils.preprocessor import Preprocessor
-from models.model import Model
+from models.model import ResNetFeedForwardModel
 from models.dataset import ImageDataset
-from tqdm import tqdm
 
-FOLD_SIZE = 5
+NUM_MODEL = 4
 IMG_SIZE = 224
 HIDDEN_SIZE = 2048
 DROPOUT_PROB = 0.1
-BATCH_SIZE = 16
+BATCH_SIZE = 8
 INFO_PATH = "/home/work/data/task1/info_etri20_emotion_test.csv"
 IMAGE_DIR = "/home/work/data/task1/test/"
 NUM_WORKERS = 2
@@ -46,50 +49,73 @@ def predict():
 
     # -- model    
     label_size = {"daily" : 7, "gender" : 6, "embellishment" : 3}
+    daily_pred_list, gender_pred_list, emb_pred_list = [], [], []
 
+    model_paths = [
+        "/home/work/model/checkpoints/model1/checkpoint-2400.pt",
+        "/home/work/model/checkpoints/model2/checkpoint-2400.pt",
+        "/home/work/model/checkpoints/model3/checkpoint-2400.pt",
+        "/home/work/model/checkpoints/model4/checkpoint-2400.pt"
+    ]
 
-    print("\nLoading Model")
-    model = Model(HIDDEN_SIZE,
-        label_size["daily"],
-        label_size["gender"],
-        label_size["embellishment"],
-        DROPOUT_PROB,
-        pretrained=False
-    )
-    model_path = f"/home/work/model/checkpoints/model1/checkpoint-1000.pt"
-    model.load_state_dict(torch.load(model_path, map_location=cuda_str))
-    model.to(device)
+    model_names = [
+        "ResNetFeedForwardModel",
+        "DenseNetFeedForwardModel",
+        "ResNetResidualConnectionModel",
+        "DenseNetResidualConnectionModel",
+    ]
 
-    daily_predictions = []
-    gender_predictions = []
-    emb_predictions = []
+    model_lib = importlib.import_module("models.model")
 
-    # -- Predict
-    with torch.no_grad() :
-        model.eval()
+    for i in range(NUM_MODEL) :
+        print("\nLoading %dth Model" %(i+1))
+        model_path = model_paths[i]
+        model_name = model_names[i]
+        model_class = getattr(model_lib, model_name)
+        model = model_class(HIDDEN_SIZE,
+            label_size["daily"],
+            label_size["gender"],
+            label_size["embellishment"],
+            DROPOUT_PROB,
+            pretrained=False
+        )
+        model.load_state_dict(torch.load(model_path, map_location=cuda_str))
+        model.to(device)
 
-        for eval_data in tqdm(dataloader) :
-            img = eval_data["image"].to(device)
-            daily_logit, gender_logit, emb_logit = model(img)
+        daily_predictions, gender_predictions, emb_predictions = [], [], []
+        # -- Predict
+        with torch.no_grad() :
+            model.eval()
+            for eval_data in tqdm(dataloader) :
+                img = eval_data["image"].to(device)
+                daily_logit, gender_logit, emb_logit = model(img)
 
-            daily_pred = torch.argmax(daily_logit, -1)
-            gender_pred = torch.argmax(gender_logit, -1)
-            emb_pred = torch.argmax(emb_logit, -1)
+                daily_predictions.extend(daily_logit.detach().cpu().numpy().tolist())
+                gender_predictions.extend(gender_logit.detach().cpu().numpy().tolist())
+                emb_predictions.extend(emb_logit.detach().cpu().numpy().tolist())
 
-            daily_predictions.extend(daily_pred.detach().cpu().numpy().tolist())
-            gender_predictions.extend(gender_pred.detach().cpu().numpy().tolist())
-            emb_predictions.extend(emb_pred.detach().cpu().numpy().tolist())
+        daily_pred_list.append(daily_predictions)
+        gender_pred_list.append(gender_predictions)
+        emb_pred_list.append(emb_predictions)
 
-    daily_predictions = np.array(daily_predictions)
-    gender_predictions = np.array(gender_predictions)
-    emb_predictions = np.array(emb_predictions)
+    # -- Ensembale
+    print("\nEnsemable predictions")
+    daily_id_list, gender_id_list, emb_id_list = [], [], []
+    for i in tqdm(range(len(df))) :
+        daily_pred = np.sum([daily_pred_list[j][i] for j in range(NUM_MODEL)], axis=0)
+        daily_id_list.append(daily_pred.argmax())
+
+        gender_pred = np.sum([gender_pred_list[j][i] for j in range(NUM_MODEL)], axis=0)
+        gender_id_list.append(gender_pred.argmax())
+
+        emb_pred = np.sum([emb_pred_list[j][i] for j in range(NUM_MODEL)], axis=0)
+        emb_id_list.append(emb_pred.argmax())
 
     print("\nSaving results")
-    df['Daily'] = daily_predictions.astype(int)
-    df['Gender'] = gender_predictions.astype(int)
-    df['Embellishment'] = emb_predictions.astype(int)
+    df['Daily'] = np.array(daily_id_list).astype(int)
+    df['Gender'] = np.array(gender_id_list).astype(int)
+    df['Embellishment'] = np.array(emb_id_list).astype(int)
     df.to_csv('/home/work/model/prediction.csv', index=False)
 
 if __name__ == '__main__':
     predict()
-

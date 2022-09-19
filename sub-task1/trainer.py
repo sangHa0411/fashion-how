@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 class Trainer :
 
     def __init__(self, args, device, model, train_dataloader, eval_dataloader) :
-
         self._args = args
         self._model = model
         self._device = device
@@ -21,7 +20,7 @@ class Trainer :
 
         self._total_steps = len(train_dataloader) * args.epochs if args.max_steps == -1 else args.max_steps
         self._warmup_steps = int(args.warmup_ratio * self._total_steps)
-        self._optimizer = optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+        self._optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
         self._scheduler = LinearWarmupScheduler(self._optimizer, self._total_steps, self._warmup_steps)
 
     def train(self,) :
@@ -47,6 +46,13 @@ class Trainer :
         }
         wandb.config.update(training_args)
 
+        if not os.path.exists(self._args.save_path) :
+            os.mkdir(self._args.save_path)
+        
+        checkpoints_dir_path = os.path.join(self._args.save_path, f"model{self._args.num_model}")
+        if not os.path.exists(checkpoints_dir_path) :
+            os.mkdir(checkpoints_dir_path)
+
         print("\nTraining")        
         train_data_iterator = iter(self._train_dataloader)
         for step in tqdm(range(self._total_steps), desc="Training") :
@@ -63,25 +69,11 @@ class Trainer :
             gender = data["gender"].to(self._device)
             emb = data["embellishment"].to(self._device)
 
-            if self._args.loss == "rdrop" :
-                batch_size = img.shape[0]
-                img = torch.cat([img, img], dim=0)
-                daily_logit, gender_logit, emb_logit = self._model(img)
-
-                daily_logit1, daily_logit2 = daily_logit[:batch_size], daily_logit[batch_size:]
-                gender_logit1, gender_logit2 = gender_logit[:batch_size], gender_logit[batch_size:]
-                emb_logit1, emb_logit2 = emb_logit[:batch_size], emb_logit[batch_size:]
- 
-                daily_loss = self.rdrop_loss(daily_logit1, daily_logit2, daily)
-                gender_loss = self.rdrop_loss(gender_logit1, gender_logit2, gender)
-                emb_loss = self.rdrop_loss(emb_logit1, emb_logit2, emb)
-    
-            else :
-                daily_logit, gender_logit, emb_logit = self._model(img)
-                
-                daily_loss = self.softmax_loss(daily_logit, daily)
-                gender_loss = self.softmax_loss(gender_logit, gender)
-                emb_loss = self.softmax_loss(emb_logit, emb)
+            daily_logit, gender_logit, emb_logit = self._model(img)
+            
+            daily_loss = self.softmax_loss(daily_logit, daily)
+            gender_loss = self.softmax_loss(gender_logit, gender)
+            emb_loss = self.softmax_loss(emb_logit, emb)
 
             loss = daily_loss + gender_loss + emb_loss
             loss.backward()
@@ -102,14 +94,18 @@ class Trainer :
                 if self._args.do_eval :
                     self.evaluate(step)
                 
-                # path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{step}.pt")
-                # torch.save(self._model.state_dict(), path)
+                if self._args.do_eval == False :
+                    model_path = f"checkpoint-{step}.pt"
+                    self.save(self._model, checkpoints_dir_path, model_path)
+                   
 
         if self._args.do_eval :
             self.evaluate(self._total_steps)
 
-        # path = os.path.join(self._args.save_path, f"model{self._args.num_model}", f"checkpoint-{self._total_steps}.pt")
-        # torch.save(self._model.state_dict(), path)
+        if self._args.do_eval == False :
+            model_path = f"checkpoint-{self._total_steps}.pt"
+            self.save(self._model, checkpoints_dir_path, model_path)
+
         wandb.finish()
 
     def evaluate(self, step) :
@@ -166,12 +162,8 @@ class Trainer :
 
         return acc
 
-    def rdrop_loss(self, logit1, logit2, label) :
-        ce_loss1 = self.softmax_loss(logit1, label)
-        ce_loss2 = self.softmax_loss(logit2, label)
-
-        kl_loss1 = F.kl_div(F.log_softmax(logit1, dim=-1), F.softmax(logit2, dim=-1), reduction='batchmean')
-        kl_loss2 = F.kl_div(F.log_softmax(logit2, dim=-1), F.softmax(logit1, dim=-1), reduction='batchmean')
-
-        loss = (ce_loss1 + ce_loss2) / 2 + 0.1 * (kl_loss1 + kl_loss2)
-        return loss
+    def save(self, model, dir_path, model_name) :
+        if not os.path.exists(dir_path) :
+            os.mkdir(dir_path)
+        model_path = os.path.join(dir_path, model_name)        
+        torch.save(model.state_dict(), model_path)

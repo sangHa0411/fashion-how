@@ -6,6 +6,7 @@ import numpy as np
 from trainer import Trainer
 from torch.utils.data import DataLoader
 from utils.loader import Loader
+from utils.preprocessor import Preprocessor
 from utils.augmentation import CutMix
 from models.dataset import ImageDataset
 
@@ -34,6 +35,15 @@ def train(args):
     print("\nAugment dataset using cutmix")
     augmentation = CutMix(args.num_aug)
     train_dataset = augmentation(train_dataset)
+    print("The number of dataset: %d" %len(train_dataset))
+
+    # -- Preprocess Data
+    print("\nPreprocessing Dataset")
+    preprocessor = Preprocessor(args.img_size)
+    train_dataset = preprocessor(train_dataset)
+    if args.do_eval :
+        eval_dataset = preprocessor(eval_dataset)
+        
     print("\nThe number of train dataset : %d" %len(train_dataset))
     if args.do_eval :
         print("The number of eval dataset : %d\n" %len(eval_dataset))
@@ -180,4 +190,3 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     train(args)
-
