@@ -12,6 +12,7 @@ from utils.loader import DialogueTestLoader
 from models.model import Model
 from models.tokenizer import SubWordEmbReaderUtil
 
+FOLD_SIZE = 3
 NUM_RNK = 3
 NUM_CORDI = 5
 NUM_FEATURE = 4
@@ -62,28 +63,6 @@ def inference() :
     eval_diag_loader = DialogueTestLoader("/home/work/data/task4/fs_eval_t1.wst.dev")
     eval_dataset = eval_diag_loader.get_dataset()
 
-    # -- Model
-    print("\nLoading Model")
-    model = Model(emb_size=swer.get_emb_size(),
-        key_size=KEY_SIZE,
-        mem_size=MEM_SIZE,
-        hops=HOPS,
-        eval_node=EVAL_NODE,
-        num_rnk=NUM_RNK,
-        num_feature=NUM_FEATURE,
-        num_cordi=NUM_CORDI,
-        num_layers=NUM_LAYERS,
-        d_model=D_MODEL,
-        hidden_size=HIDDEN_SIZE,
-        num_head=NUM_HEAD,
-        dropout_prob=DROPOUT_PROB,
-        text_feat_size=TEXT_FEAT_SIZE,
-        img_feat_size=IMG_FEAT_SIZE
-    )
-    model_path = "gAIa_model/gAIa-final.pt"
-    model.load_state_dict(torch.load(model_path, map_location=cuda_str))
-    model.to(device)
-
     # -- Encoding Data                    
     print("\nEncoding Dataset")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
     encoder = Encoder(swer, num_cordi=NUM_CORDI, mem_size=MEM_SIZE)
@@ -95,40 +74,82 @@ def inference() :
     eval_torch_dataset = FashionHowDataset(dataset=eval_encoded_dataset, 
         img_feat_dir="/home/work/data/task4/img_feats"
     )
-    eval_dataloader = DataLoader(eval_torch_dataset, 
-        batch_size=BATCH_SIZE, 
-        shuffle=False,
-        num_workers=NUM_WORKERS,
-        collate_fn=data_collator
-    )
 
-    # -- Inference
-    print("\nInference")
-    predictions = []
-    with torch.no_grad() :
-        model.eval()
-        for eval_data in eval_dataloader :
-            diag, cordi = eval_data["diag"], eval_data["cordi"]
-            diag = diag.float().to(device)
-            cordi = cordi.float().to(device)
-            logits = model(dlg=diag, crd=cordi)
+    model_paths = [
+        "/home/work/model/gAIa_model/gAIa-final-42.pt",
+        "/home/work/model/gAIa_model/gAIa-final-1234.pt",
+        "/home/work/model/gAIa_model/gAIa-final-95.pt"
+    ]
 
-            preds = torch.argsort(logits, -1, descending=True).detach().cpu().numpy()
-            ranks = []
-            for pred in preds :
-                rank = [0, 0, 0]
-                for j, p in enumerate(pred) :
-                    rank[p] = j
-                ranks.append(rank)
-            predictions.extend(ranks)
+    eval_predictions = []
+    for i in range(FOLD_SIZE) :
+        # -- Model
+        model = Model(emb_size=swer.get_emb_size(),
+            key_size=KEY_SIZE,
+            mem_size=MEM_SIZE,
+            hops=HOPS,
+            eval_node=EVAL_NODE,
+            num_rnk=NUM_RNK,
+            num_feature=NUM_FEATURE,
+            num_cordi=NUM_CORDI,
+            num_layers=NUM_LAYERS,
+            d_model=D_MODEL,
+            hidden_size=HIDDEN_SIZE,
+            num_head=NUM_HEAD,
+            dropout_prob=DROPOUT_PROB,
+            text_feat_size=TEXT_FEAT_SIZE,
+            img_feat_size=IMG_FEAT_SIZE
+        )
+        model_path = model_paths[i]
+        print("\nLoading %dth Model" %i)
+        model.load_state_dict(torch.load(model_path, map_location=cuda_str))
+        model.to(device)
 
-    pred_ids = []
-    for pred in predictions :
-        pred_ids.append(convert(pred))
+        eval_dataloader = DataLoader(eval_torch_dataset, 
+            batch_size=BATCH_SIZE, 
+            shuffle=False,
+            num_workers=NUM_WORKERS,
+            collate_fn=data_collator
+        )
 
-    pred_id_array = np.array(pred_ids)
+        # -- Inference
+        print("%dth Inference" %i)
+        predictions = []
+        with torch.no_grad() :
+            model.eval()
+            for eval_data in eval_dataloader :
+                diag, cordi = eval_data["diag"], eval_data["cordi"]
+                diag = diag.float().to(device)
+                cordi = cordi.float().to(device)
+                
+                logits = model(dlg=diag, crd=cordi)
+                logits = logits.detach().cpu().numpy().tolist()
+
+                predictions.extend(logits)
+        eval_predictions.append(predictions)
+
+    data_size = len(eval_predictions[0])
+    print("\nThe number of test data : %d" %data_size)
+    
+    eval_ranks = []
+    for i in range(data_size) :
+        logits = [eval_predictions[j][i] for j in range(FOLD_SIZE)]
+        logit = np.sum(logits, axis=0)
+
+        pred = logit.argsort()[::-1]
+        rank = [0, 0, 0]
+        for j, p in enumerate(pred) :
+            rank[p] = j
+        eval_ranks.append(rank)
+
+    print("\nPostprocessing predictions")
+    eval_ids = []
+    for rank in eval_ranks :
+        eval_ids.append(convert(rank))
+
+    eval_id_array = np.array(eval_ids)
     np.savetxt("/home/work/model/prediction.csv",
-        pred_id_array.astype(int), 
+        eval_id_array.astype(int), 
         encoding='utf8', 
         fmt='%d'
     )

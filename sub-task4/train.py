@@ -137,7 +137,10 @@ def train(args) :
             info = {"train/loss": loss.item(), "train/acc": acc, "train/learning_rate" : lr, "train/step" : step}
             print(info)
             acc = 0.0
-            
+    
+    if not os.path.exists(args.model_path) :
+        os.mkdir(args.model_path)
+
     path = os.path.join(args.model_path, f"gAIa-final-{args.seed}.pt")
     print("Saving Model : %s" %path)
     torch.save(model.state_dict(), path)

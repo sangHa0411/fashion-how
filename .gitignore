@@ -9,4 +9,5 @@ sub-task4/gAIa_model
 sub-task4/results
 *.ipynb
 *.tar.gz
+requirements.txt
 __pycache__

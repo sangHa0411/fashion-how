@@ -3,7 +3,7 @@ python train.py --in_file_trn_dialog data/ddata.wst.txt.2021.6.9 \
     --in_file_fashion data/mdata.txt.2021.10.18 \
     --subWordEmb_path data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --img_feat_dir data/img_feats \
-    --model_path /home/wkrtkd911/project/fashion-how/sub-task4/gAIa_model \
+    --model_path gAIa_model \
     --seed 42 \
     --epochs 15 \
     --learning_rate 5e-5 \
@@ -27,7 +27,7 @@ python train.py --in_file_trn_dialog data/ddata.wst.txt.2021.6.9 \
     --in_file_fashion data/mdata.txt.2021.10.18 \
     --subWordEmb_path data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --img_feat_dir data/img_feats \
-    --model_path /home/wkrtkd911/project/fashion-how/sub-task4/gAIa_model \
+    --model_path gAIa_model \
     --seed 1234 \
     --epochs 20 \
     --learning_rate 5e-5 \
@@ -51,7 +51,7 @@ python train.py --in_file_trn_dialog data/ddata.wst.txt.2021.6.9 \
     --in_file_fashion data/mdata.txt.2021.10.18 \
     --subWordEmb_path data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --img_feat_dir data/img_feats \
-    --model_path /home/wkrtkd911/project/fashion-how/sub-task4/gAIa_model \
+    --model_path gAIa_model \
     --seed 95 \
     --epochs 20 \
     --learning_rate 5e-5 \
