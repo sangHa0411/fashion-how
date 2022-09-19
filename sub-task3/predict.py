@@ -64,16 +64,15 @@ def inference() :
     ]
 
     model_paths = [
-        "/home/work/model/gAIa_CL_model/gAIa-final_42.pt",
-        "/home/work/model/gAIa_CL_model/gAIa-final_1234.pt",
-        "/home/work/model/gAIa_CL_model/gAIa-final_95.pt",
+        "/home/work/model/gAIa_CL_model/gAIa-final-42.pt",
+        "/home/work/model/gAIa_CL_model/gAIa-final-1234.pt",
+        "/home/work/model/gAIa_CL_model/gAIa-final-95.pt",
     ]
 
     # -- Model
     num_rnk = 3
     coordi_size = 4
     item_sizes = [len(img2id[i]) for i in range(4)]
-
     eval_predictions = []
     for l in range(FOLD_SIZE) :
         model = Model(emb_size=swer.get_emb_size(),

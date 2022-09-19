@@ -17,7 +17,7 @@ python train.py --in_file_trn_dialog ./data/task1.ddata.wst.txt \
 python evaluate.py --in_file_tst_dialog ./data/cl_eval_task1.wst.dev \
     --subWordEmb_path ./data/sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
     --model_path gAIa_CL_model \
-    --model_file gAIa-final-42_42.pt \
+    --model_file gAIa-final-42.pt \
     --dropout_prob 0.1 \
     --eval_batch_size 8 \
     --hops 3 \

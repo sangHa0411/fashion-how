@@ -31,20 +31,23 @@ def evaluate(args) :
     swer = SubWordEmbReaderUtil(args.subWordEmb_path)
 
     # -- Meta Data
-    print("\nLoading Meta Data...")
+    print("\nLoading meta data...")
     meta_loader = MetaLoader(args.in_file_fashion, swer)
     img2id, _, _ = meta_loader.get_dataset()
 
+    # -- Dialogue Data
+    print("\nLoading dialogue data...")
     eval_diag_loader = DialogueTestLoader(args.in_file_tst_dialog, eval_flag=True)
     eval_dataset = eval_diag_loader.get_dataset()
     eval_rewards = [eval_data.pop("reward")for eval_data in eval_dataset]
 
     # -- Encoding Data                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
-    print("\nEncoding Data...")
+    print("\nEncoding data...")
     encoder = Encoder(swer, img2id, num_cordi=4, mem_size=args.mem_size)
     eval_encoded_dataset = encoder(eval_dataset)
 
     # -- Data Collator & Loader
+    print("\nPreparing torch dataset...")
     data_collator = PaddingCollator()
     eval_torch_dataset = FashionHowDataset(dataset=eval_encoded_dataset)
     eval_dataloader = DataLoader(eval_torch_dataset, 
@@ -57,6 +60,7 @@ def evaluate(args) :
     # -- Model
     num_rnk = 3
     coordi_size = 4
+    print("\nInitializing model")
     item_sizes = [len(img2id[i]) for i in range(4)]
     model = Model(emb_size=swer.get_emb_size(),
         key_size=args.key_size,
@@ -76,6 +80,7 @@ def evaluate(args) :
         print("\nLoaded model from %s" %model_path)
 
     # -- Inference
+    print("\nInference using model")
     model.to(device)
     eval_predictions = []
     with torch.no_grad() :
@@ -101,6 +106,7 @@ def evaluate(args) :
         eval_tau += tau
 
     eval_tau /= len(eval_rewards)
+    print("\nResults")
     print("Data : %s \t Evaluation Tau : %.4f" %(args.in_file_tst_dialog, eval_tau))
 
 def seed_everything(seed):
