@@ -140,7 +140,7 @@ def train(args) :
             acc = 0.0
 
     consolidate(estimate_fisher(train_dataloader, model, device, args.batch_size), model)
-    path = os.path.join(args.model_path, f"gAIa-final.pt")
+    path = os.path.join(args.model_path, f"gAIa-final-{args.seed}.pt")
     print("Saving Model : %s" %path)
     torch.save(model.state_dict(), path)
 

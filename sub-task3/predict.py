@@ -13,6 +13,7 @@ from utils.loader import MetaLoader, DialogueTestLoader
 from models.model import Model
 from models.tokenizer import SubWordEmbReaderUtil
 
+FOLD_SIZE = 3
 KEY_SIZE = 512
 IMG_FEAT_SIZE = 512
 TEXT_FEAT_SIZE = 512
@@ -62,68 +63,88 @@ def inference() :
         "/home/work/data/task3/cl_eval_task6.wst.tst"
     ]
 
+    model_paths = [
+        "/home/work/model/gAIa_CL_model/gAIa-final_42.pt",
+        "/home/work/model/gAIa_CL_model/gAIa-final_1234.pt",
+        "/home/work/model/gAIa_CL_model/gAIa-final_95.pt",
+    ]
+
     # -- Model
     num_rnk = 3
     coordi_size = 4
     item_sizes = [len(img2id[i]) for i in range(4)]
-    model = Model(emb_size=swer.get_emb_size(),
-        key_size=KEY_SIZE,
-        mem_size=MEM_SIZE,
-        hops=HOPS,
-        item_sizes=item_sizes,
-        coordi_size=coordi_size,
-        eval_node=EVAL_NODE,
-        num_rnk=num_rnk,
-        dropout_prob=DROPOUT_PROB,
-        text_feat_size=TEXT_FEAT_SIZE,
-        img_feat_size=IMG_FEAT_SIZE
-    )
-    model_path = "gAIa_CL_model/gAIa-final.pt"
-    model.load_state_dict(torch.load(model_path, map_location=cuda_str))
 
-    model.to(device)
     eval_predictions = []
-    for i in range(len(in_file_tst_dialog)) :
-        file_tst_dialog = in_file_tst_dialog[i]
-
-        eval_diag_loader = DialogueTestLoader(file_tst_dialog, eval_flag=False)
-        eval_dataset = eval_diag_loader.get_dataset()
-
-        # -- Encoding Data                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
-        encoder = Encoder(swer, img2id, num_cordi=4, mem_size=MEM_SIZE)
-        eval_encoded_dataset = encoder(eval_dataset)
-
-        # -- Data Collator & Loader
-        data_collator = PaddingCollator()
-        eval_torch_dataset = FashionHowDataset(dataset=eval_encoded_dataset)
-        eval_dataloader = DataLoader(eval_torch_dataset, 
-            batch_size=BATCH_SIZE, 
-            shuffle=False,
-            num_workers=NUM_WORKERS,
-            collate_fn=data_collator
+    for l in range(FOLD_SIZE) :
+        model = Model(emb_size=swer.get_emb_size(),
+            key_size=KEY_SIZE,
+            mem_size=MEM_SIZE,
+            hops=HOPS,
+            item_sizes=item_sizes,
+            coordi_size=coordi_size,
+            eval_node=EVAL_NODE,
+            num_rnk=num_rnk,
+            dropout_prob=DROPOUT_PROB,
+            text_feat_size=TEXT_FEAT_SIZE,
+            img_feat_size=IMG_FEAT_SIZE
         )
+        model_path = model_paths[l]
+        print("\nLoading %dth Model" %l)
+        model.load_state_dict(torch.load(model_path, map_location=cuda_str))
+        model.to(device)
 
-        # -- Inference
-        with torch.no_grad() :
-            model.eval()
-            for eval_data in eval_dataloader :
-                diag, cordi = eval_data["diag"], eval_data["cordi"]
-                diag = diag.float().to(device)
-                cordi = cordi.long().to(device)
-                logits = model(dlg=diag, crd=cordi)
+        print("Inference using %dth Model" %l)
+        eval_logits = []
+        for i in range(len(in_file_tst_dialog)) :
+            file_tst_dialog = in_file_tst_dialog[i]
 
-                preds = torch.argsort(logits, -1, descending=True).detach().cpu().numpy()
-                ranks = []
-                for pred in preds :
-                    rank = [0, 0, 0]
-                    for j, p in enumerate(pred) :
-                        rank[p] = j
-                    ranks.append(rank)
-                eval_predictions.extend(ranks)
+            eval_diag_loader = DialogueTestLoader(file_tst_dialog, eval_flag=False)
+            eval_dataset = eval_diag_loader.get_dataset()
+
+            # -- Encoding Data                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+            encoder = Encoder(swer, img2id, num_cordi=4, mem_size=MEM_SIZE)
+            eval_encoded_dataset = encoder(eval_dataset)
+
+            # -- Data Collator & Loader
+            data_collator = PaddingCollator()
+            eval_torch_dataset = FashionHowDataset(dataset=eval_encoded_dataset)
+            eval_dataloader = DataLoader(eval_torch_dataset, 
+                batch_size=BATCH_SIZE, 
+                shuffle=False,
+                num_workers=NUM_WORKERS,
+                collate_fn=data_collator
+            )
+
+            # -- Inference
+            with torch.no_grad() :
+                model.eval()
+                for eval_data in eval_dataloader :
+                    diag, cordi = eval_data["diag"], eval_data["cordi"]
+                    diag = diag.float().to(device)
+                    cordi = cordi.long().to(device)
+                    logits = model(dlg=diag, crd=cordi)
+
+                    logits = logits.detach().cpu().numpy()
+                    eval_logits.extend(logits.tolist())
+
+        eval_predictions.append(eval_logits)
+
+    eval_ranks = []
+    row_size = len(eval_predictions[0])
+    print("The number of data : %d" %row_size)
+    for i in range(row_size) :
+        columns = [eval_predictions[j][i] for j in range(FOLD_SIZE)]
+        col_sum = np.sum(columns, axis=0)
+        col_rank = col_sum.argsort()[::-1]
+
+        rank = [0, 0, 0]
+        for j, p in enumerate(col_rank) :
+            rank[p] = j
+        eval_ranks.append(rank)
 
     predictions = []
-    for pred in eval_predictions :
-        predictions.append(convert(pred))
+    for rank in eval_ranks :
+        predictions.append(convert(rank))
 
     predictions = np.array(predictions)
     np.savetxt(f"/home/work/model/prediction.csv", 

@@ -1,6 +1,9 @@
 import torch
 
 class PaddingCollator :
+    """
+    diag, cordi, rank를 batch에 알맞게 torch.tensor로 변환하기 위한 함수입니다.
+    """
     def __init__(self, ) :
         pass
 

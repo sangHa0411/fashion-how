@@ -4,7 +4,11 @@ import random
 import numpy as np
 
 class DataAugmentation :
-
+    """
+    Preprocessor를 거친 대화, cordi 데이터를 대상으로 해당 cordi 중 임의로 하나를 선택합니다.
+    해당 cordi에서 4가지 아이템 중에 하나를 임의로 선택합니다. (dummy label 제외)
+    선택된 아이템과 코사인 유사도 기반으로 유사한 아이템을 선택해서 추천을 하나 만들어 줌으로써 데이터를 추가합니다.
+    """
     def __init__(self, num_aug) :
         self.num_aug = num_aug
 
