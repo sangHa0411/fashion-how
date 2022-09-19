@@ -30,6 +30,7 @@ class CutMix :
 
                 # target
                 tar_img = copy.deepcopy(dataset[rand_id]["image"])
+                tar_img = transform.resize(tar_img, (org_h, org_w), mode='constant')
                 
                 tar_daily = dataset[rand_id]["daily"]
                 tar_gender = dataset[rand_id]["gender"]

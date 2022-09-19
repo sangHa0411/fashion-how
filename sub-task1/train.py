@@ -25,7 +25,7 @@ def train(args):
     random.shuffle(dataset)
 
     if args.do_eval :
-        size = int(len(dataset) / 4)
+        size = int(len(dataset) / 5)
         train_dataset = dataset[size:]
         eval_dataset = dataset[:size]
     else :
