@@ -9,7 +9,9 @@ from tqdm import tqdm
 from skimage import io, transform, color
 
 class Loader :
-
+    """
+    데이터가 있는 디렉토리 경로를 받아서 거기에 있는 이미지를 불러오는 역할을 합니다.
+    """
     def __init__(self, info_path, dir_path, img_size) :
         self._info_path = info_path
         self._dir_path = dir_path
@@ -17,10 +19,13 @@ class Loader :
         self._df = pd.read_csv(info_path)
 
     def get_data(self, i) :
-
+        """
+        해당 인덱스의 이미지 이름을 통해서 실제 이미지를 skimage 라이브러리를 통해 불러옵니다.
+        해당 이미지 사이즈의 비율을 파악해서 높이 너비 둘 중 긴 길이를 224로 적용해서 이미지 사이지를 수정합니다.
+        """
         daily_size = len(self._df["Daily"].unique())
         gender_size = len(self._df["Gender"].unique())
-        emb_size = len(self._df["Embellishment"].unique())
+        emb_size = len(self._df["Embellishment"].unique())ㅁ
 
         row = self._df.iloc[i]
 
@@ -65,6 +70,9 @@ class Loader :
 
 
     def get_dataset_parallel(self) :
+        """
+        get_data 함수를 병렬적으로 수행해서 전체 데이터를 불러옵니다.
+        """
         num_cores = multiprocessing.cpu_count()
         dataset = parmap.map(self.get_data, 
             range(len(self._df)), 
@@ -75,6 +83,9 @@ class Loader :
 
 
     def get_dataset(self) :
+        """
+        get_data 함수를 순차적으로 수행해서 전체 데이터를 불러옵니다.
+        """
         dataset = []
         for i in tqdm(range(len(self._df))) :
             data = self.get_data(i)
@@ -83,7 +94,9 @@ class Loader :
 
 
     def get_label_size(self) :
-
+        """
+        label에 해당되는 Daily, Gender, Embellishment의 사이즈를 파악해서 반환합니다.
+        """
         daily_size = len(self._df["Daily"].unique())
         gender_size = len(self._df["Gender"].unique())
         emb_size = len(self._df["Embellishment"].unique())

@@ -2,6 +2,9 @@
 import torch
 
 class LinearWarmupScheduler(torch.optim.lr_scheduler.LambdaLR):
+    """
+    Linear Warmup Schedule 방식으로 learning rate을 조정하기 위한 클래스입니다.
+    """
     def __init__(self, optimizer, total_steps, warmup_steps, last_epoch=-1):
 
         def lr_lambda(current_step: int):

@@ -4,7 +4,11 @@ from skimage import transform
 from tqdm import tqdm
 
 class CutMix :
-
+    """
+    CutMix 논문 (https://arxiv.org/abs/1905.04899) 을 참고해서 CutMix 데이터 증강 방법을 구현했습니다.
+    기존 이미지가 있으면 대상 이미지를 랜덤으로 선정하고 lambda 값을 임의로 지정해서 기존 이미지와 해당 이미지를 적절히 조합합니다. 
+    이미지가 조합되면서 해당 이미지에 대한 label도 섞인 이미지의 비율대로 조정이 됩니다.
+    """
     def __init__(self, num_aug) :
         self._num_aug = num_aug
 

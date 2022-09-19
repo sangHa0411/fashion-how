@@ -7,7 +7,11 @@ from torchvision.models.resnet import resnet152
 from torchvision.models.densenet import densenet161
 
 class ResidualClassifier(nn.Module) :
-
+    """
+    ResidualConnection을 응용해서 만든 클래스입니다.
+    long network와 short network가 있는데 이를 통과하면 
+    representation size가 동일하게 되는데 이를 더한 이후에 classifier로 전달이 됩니다.
+    """
     def __init__(self, feature_size, hidden_size, class_size) :
         super(ResidualClassifier, self).__init__()
 
@@ -35,6 +39,9 @@ class ResidualClassifier(nn.Module) :
 
 
 class ResNetFeedForwardModel(nn.Module):
+    """
+    ResNet 152를 backbone으로 해서 이미지가 입력이되면 daily, gender, embellishment를 분류하는 모델입니다.
+    """
     def __init__(self, 
         hidden_size,
         class1_size, 
@@ -87,6 +94,10 @@ class ResNetFeedForwardModel(nn.Module):
 
 
 class ResNetResidualConnectionModel(nn.Module):
+    """
+    ResNet 152를 backbone으로 해서 이미지가 입력이되면 daily, gender, embellishment를 분류하는 모델입니다.
+    앞서 구현한 ResidualClassifier을 활용하였습니다.
+    """
     def __init__(self, 
         hidden_size,
         class1_size, 
@@ -136,6 +147,9 @@ class ResNetResidualConnectionModel(nn.Module):
 
 
 class DenseNetFeedForwardModel(nn.Module):
+    """
+    DenseNet161 161를 backbone으로 해서 이미지가 입력이되면 daily, gender, embellishment를 분류하는 모델입니다.
+    """
     def __init__(self, 
         hidden_size,
         class1_size, 
@@ -189,6 +203,10 @@ class DenseNetFeedForwardModel(nn.Module):
 
 
 class DenseNetResidualConnectionModel(nn.Module):
+    """
+    DenseNet161 161를 backbone으로 해서 이미지가 입력이되면 daily, gender, embellishment를 분류하는 모델입니다.
+    앞서 구현한 ResidualClassifier을 활용하였습니다.
+    """
     def __init__(self, 
         hidden_size,
         class1_size, 

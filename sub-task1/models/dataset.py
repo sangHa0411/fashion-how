@@ -3,7 +3,6 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 
 class ImageDataset(Dataset):
-
     def __init__(self, dataset):
         self.dataset = dataset
         self.to_tensor = transforms.ToTensor()

@@ -1,6 +1,6 @@
 import os
 from pickletools import optimize
-import wandb
+# import wandb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,7 +10,11 @@ from models.scheduler import LinearWarmupScheduler
 from dotenv import load_dotenv
 
 class Trainer :
-
+    """
+    모델의 학습, 평가 그리고 저장을 처리하는 trainer 클래스입니다.
+    argument에 do_eval이 있어야 평가를 진행하고 do_eval이 없어야 모든 데이터로 학습을 진행하며 학습된 모델을 지정된 경로에 저장합니다.
+    그리고 학습 과정을 wandb에 로그를 해서 각각의 실험에 대한 성능을 비교할 수 있게 합니다.
+    """
     def __init__(self, args, device, model, train_dataloader, eval_dataloader) :
         self._args = args
         self._model = model
@@ -24,27 +28,29 @@ class Trainer :
         self._scheduler = LinearWarmupScheduler(self._optimizer, self._total_steps, self._warmup_steps)
 
     def train(self,) :
+        """
+        모델을 학습하고 평가 그리고 저장하기 위한 함수
+        """
+        # load_dotenv(dotenv_path="wandb.env")
+        # WANDB_AUTH_KEY = os.getenv("WANDB_AUTH_KEY")
+        # wandb.login(key=WANDB_AUTH_KEY)
 
-        load_dotenv(dotenv_path="wandb.env")
-        WANDB_AUTH_KEY = os.getenv("WANDB_AUTH_KEY")
-        wandb.login(key=WANDB_AUTH_KEY)
+        # name = f"EP:{self._args.epochs}_BS:{self._args.batch_size}_LR:{self._args.learning_rate}_WD:{self._args.weight_decay}"
+        # wandb.init(
+        #     entity="sangha0411",
+        #     project="fashion-how",
+        #     group=f"sub-task1",
+        #     name=name
+        # )
 
-        name = f"EP:{self._args.epochs}_BS:{self._args.batch_size}_LR:{self._args.learning_rate}_WD:{self._args.weight_decay}"
-        wandb.init(
-            entity="sangha0411",
-            project="fashion-how",
-            group=f"sub-task1",
-            name=name
-        )
-
-        training_args = {"epochs": self._args.epochs, 
-            "total_steps" : self._total_steps,
-            "warmup_steps" : self._warmup_steps,
-            "batch_size": self._args.batch_size, 
-            "learning_rate": self._args.learning_rate, 
-            "weight_decay": self._args.weight_decay, 
-        }
-        wandb.config.update(training_args)
+        # training_args = {"epochs": self._args.epochs, 
+        #     "total_steps" : self._total_steps,
+        #     "warmup_steps" : self._warmup_steps,
+        #     "batch_size": self._args.batch_size, 
+        #     "learning_rate": self._args.learning_rate, 
+        #     "weight_decay": self._args.weight_decay, 
+        # }
+        # wandb.config.update(training_args)
 
         if not os.path.exists(self._args.save_path) :
             os.mkdir(self._args.save_path)
@@ -87,7 +93,7 @@ class Trainer :
                     "train/embellishment_loss": emb_loss.item(),
                     "train/step" : step,
                 }
-                wandb.log(info)
+                # wandb.log(info)
                 print(info)
 
             if step > 0 and step % self._args.save_steps == 0 :
@@ -106,9 +112,12 @@ class Trainer :
             model_path = f"checkpoint-{self._total_steps}.pt"
             self.save(self._model, checkpoints_dir_path, model_path)
 
-        wandb.finish()
+        # wandb.finish()
 
     def evaluate(self, step) :
+        """
+        해당 step에서 모델을 평가하기 위한 함수
+        """
         eval_size = len(self._eval_dataloader) * self._args.eval_batch_size
         print("\nEvaluating model at %d step" %step)
         with torch.no_grad() :
@@ -140,11 +149,14 @@ class Trainer :
                 "eval/acc" : acc,
                 "eval/step" : step,
             }
-            wandb.log(info)  
+            # wandb.log(info)  
             print(info) 
             self._model.train()
 
     def softmax_loss(self, logit, label) :
+        """
+        logit, label이 주어지면 cross entropy loss를 구하기 위한 함수
+        """
         log_softmax = -F.log_softmax(logit, dim=-1)
         loss = log_softmax * label
         loss_per_data = torch.mean(loss, dim=-1)
@@ -152,6 +164,9 @@ class Trainer :
         return mean_loss
 
     def acc(self, logit, label) :
+        """
+        logit을 기준으로 label과 비교해서 accuracy를 구하기 위한 함수
+        """
         acc = 0.0
         logit = logit.detach().cpu().numpy()
         label = label.detach().cpu().numpy()
@@ -163,6 +178,9 @@ class Trainer :
         return acc
 
     def save(self, model, dir_path, model_name) :
+        """
+        지정된 경로에 해당 이름으로 모델을 저장하기 위한 함수
+        """
         if not os.path.exists(dir_path) :
             os.mkdir(dir_path)
         model_path = os.path.join(dir_path, model_name)        

@@ -51,13 +51,15 @@ def predict():
     label_size = {"daily" : 7, "gender" : 6, "embellishment" : 3}
     daily_pred_list, gender_pred_list, emb_pred_list = [], [], []
 
+    # 총 4개의 모델을 앙상블합니다.
+    # 모델 경로들
     model_paths = [
         "/home/work/model/checkpoints/model1/checkpoint-2400.pt",
         "/home/work/model/checkpoints/model2/checkpoint-2400.pt",
         "/home/work/model/checkpoints/model3/checkpoint-2400.pt",
         "/home/work/model/checkpoints/model4/checkpoint-2400.pt"
     ]
-
+    # 모델 class 이름들
     model_names = [
         "ResNetFeedForwardModel",
         "DenseNetFeedForwardModel",
@@ -67,6 +69,7 @@ def predict():
 
     model_lib = importlib.import_module("models.model")
 
+    # 순차적으로 모델을 불러와서 추론을 진행, 추론 결과를 logit 형태로 저장합니다.
     for i in range(NUM_MODEL) :
         print("\nLoading %dth Model" %(i+1))
         model_path = model_paths[i]
@@ -100,6 +103,7 @@ def predict():
 
     # -- Ensembale
     print("\nEnsemable predictions")
+    # 저장된 logit 값들을 기반으로 soft voting 형식으로 앙상블을 진행합니다.
     daily_id_list, gender_id_list, emb_id_list = [], [], []
     for i in tqdm(range(len(df))) :
         daily_pred = np.sum([daily_pred_list[j][i] for j in range(NUM_MODEL)], axis=0)
