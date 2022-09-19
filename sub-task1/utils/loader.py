@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import multiprocessing
 import parmap
+from tqdm import tqdm
 from skimage import io, transform, color
 
 class Loader :
@@ -62,7 +63,8 @@ class Loader :
         data = {"image" : img_, "daily" : daily, "gender" : gender, "embellishment" : emb}
         return data
 
-    def get_dataset(self) :
+
+    def get_dataset_parallel(self) :
         num_cores = multiprocessing.cpu_count()
         dataset = parmap.map(self.get_data, 
             range(len(self._df)), 
@@ -70,6 +72,15 @@ class Loader :
             pm_processes=num_cores
         )
         return dataset
+
+
+    def get_dataset(self) :
+        dataset = []
+        for i in tqdm(range(len(self._df))) :
+            data = self.get_data(i)
+            dataset.append(data)
+        return dataset
+
 
     def get_label_size(self) :
 

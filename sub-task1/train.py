@@ -20,7 +20,7 @@ def train(args):
 
     # -- Loading Data
     loader = Loader(args.info_path, args.image_dir, args.img_size)
-    dataset = loader.get_dataset()
+    dataset = loader.get_dataset_parallel()
     print("The number of dataset : %d" %len(dataset))
     random.shuffle(dataset)
 
@@ -136,11 +136,11 @@ if __name__ == '__main__':
         help='augmentation size'
     )
     parser.add_argument('--image_dir', type=str,
-        default='/home/wkrtkd911/project/fashion-how/sub-task1/data/train',
+        default='./data/train',
         help='fahsion image directory'
     )
     parser.add_argument('--info_path', type=str,
-        default='/home/wkrtkd911/project/fashion-how/sub-task1/data/info_etri20_emotion_train.csv',
+        default='./data/info_etri20_emotion_train.csv',
         help='fashion image information path'
     )
     parser.add_argument('--save_path', type=str,
