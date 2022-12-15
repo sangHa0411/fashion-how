@@ -42,7 +42,7 @@
        1. 대회 요구사항
            * 6개의 데이터를 순차적으로 학습 및 저장을 진행하면서 망각효과를 최대한 줄이는 과정이 필요했다. (Continual Learning)
        2. 방향
-           * 문제에서 주어진 ewc loss(https://github.com/kuc2477/pytorch-ewc)를 참고하고 이를 사용
+           * 베이스라인에서 사용된 ewc loss(https://github.com/kuc2477/pytorch-ewc)를 이해하고 활용
    2. Sub-Task 4
        1. 대회 요구사항
            * 학습할 때는 악세사리가 입력되지 않지만 추론을 할 때는 악세사리 데이터가 입력되어서 이에 대한 대처가 필요했다. (Zero-Shot Learning)
